@@ -71,11 +71,36 @@ body.dk canvas.cv{filter:brightness(.72) saturate(.85)}
 body.rm *{animation:none!important;transition:none!important}
 body.fs1{font-size:18px}body.fs1 .box{font-size:20px}body.fs1 .opt{font-size:19px}body.fs1 .mut,body.fs1 .dr,body.fs1 .arow,body.fs1 .fr{font-size:16px}body.fs1 .axl{font-size:15px}body.fs1 .sm{font-size:14px}
 body.fs2{font-size:20px}body.fs2 .box{font-size:23px}body.fs2 .opt{font-size:22px}body.fs2 .mut,body.fs2 .dr,body.fs2 .arow,body.fs2 .fr{font-size:18px}body.fs2 .axl{font-size:17px}body.fs2 .sm{font-size:15px}
+.tmr{height:14px;border:3px solid var(--line);background:var(--panel);margin:10px 0 0;display:none}
+.tmr i{display:block;height:100%;width:100%;background:var(--acc2)}
+#obs{margin:10px 0 0;padding:8px 12px;border-left:6px solid #d9473f;background:var(--soft);font-style:italic;font-size:14px;display:none}
+.box{white-space:pre-line}
+.btn.dark{background:#1b1030;color:#ffcc4d}
+body.pm{--bg:#0b0a14;--panel:#171528;--ink:#e9e4d4;--acc:#b8322a;--acc2:#b8322a;--line:#000;--mut:#8a86a8;--soft:#211e38;--btxt:#fff}
+body.pm canvas.cv{filter:saturate(.75) contrast(1.05)}
+#bQuitP{display:none;margin-left:auto}
+.opt.gone{opacity:.28;text-decoration:line-through;pointer-events:none;border-style:dashed}
+.gate-in{display:block;width:100%;font:inherit;font-size:15px;padding:8px 10px;margin:6px 0;border:3px solid var(--line);background:var(--panel);color:var(--ink)}
+.stats{display:flex;gap:8px;margin:10px 0}
+.stats div{flex:1;border:3px solid var(--line);background:var(--soft);padding:8px 4px;text-align:center}
+.stats b{display:block;font-size:26px;line-height:1.1}
+.stats span{font-size:12px;color:var(--mut)}
+.led.to{border-color:var(--acc);background:#2a1216}
+details.dt{margin-top:8px}
+details.dt summary{cursor:pointer;padding:8px 2px;font-weight:bold;list-style:none}
+details.dt summary::-webkit-details-marker{display:none}
+details.dt summary::before{content:'▸ '}
+details.dt[open] summary::before{content:'▾ '}
+.updbar,#updBar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:99;align-items:center;gap:10px;padding:10px 14px;background:#ffcc4d;color:#1b1030;border-top:4px solid #000;font-size:15px;font-weight:bold}
+#updBar span{flex:1}
+#updBar button{font:inherit;font-size:14px;font-weight:bold;border:3px solid #000;background:#fff;color:#000;padding:6px 12px;cursor:pointer}
+.led{margin:6px 0;padding:6px 10px;border:3px solid var(--line);background:var(--soft);font-size:14px}
 .note{font-size:12px;color:var(--mut);text-align:center;margin:6px 0 24px}
 @media(max-width:520px){.arow span{width:104px}.card h2{font-size:19px}}
 </style>
 </head>
 <body>
+<div id="updBar" role="status"><span>มีเวอร์ชันใหม่ของเกม</span><button id="updGo">อัปเดต</button><button id="updNo" aria-label="ปิด">✕</button></div>
 <div id="app">
   <div class="top">
     <div class="logo">NO REGRETS?</div>
@@ -94,17 +119,45 @@ body.fs2{font-size:20px}body.fs2 .box{font-size:23px}body.fs2 .opt{font-size:22p
         <button class="btn alt" data-n="100">เต็ม 100 ข้อ</button>
       </div>
       <p class="mut">ข้อที่ได้จะสุ่มทุกรอบ มีการจับเวลาตอบเงียบๆ และบางข้อจะมี "ตอนต่อ" ตามผลที่คุณเลือกไว้</p>
+      <div style="margin:14px 0 4px"><button class="btn dark" id="bPress">⚠ โหมดบีบคั้น</button><div class="mut" style="font-size:12px">ชุดคำถามใหม่ที่ออกแบบให้กดดัน (อายุ 18+)</div></div>
+      <p class="mut" id="startNote" style="margin:6px 0"></p>
       <div class="fr" id="frBox" style="display:none"></div>
       <div class="fr">มีรหัสหรือลิงก์จากเพื่อน? <input id="frIn" placeholder="วางรหัส/ลิงก์"> <button class="sm" id="frGo">ใช้</button><div id="frMsg" class="mut" style="margin-top:4px"></div></div>
     </div>
   </section>
 
   <section id="sGame" class="screen">
-    <div class="hud"><span id="qno"></span><div class="pbar"><i id="pfill"></i></div></div>
+    <div class="hud"><span id="qno"></span><div class="pbar"><i id="pfill"></i></div><button class="sm" id="bQuitP">ออก</button></div>
     <canvas id="cv" class="cv" width="160" height="90"></canvas>
+    <div class="tmr" id="tmr"><i id="tfill"></i></div>
+    <div id="obs"></div>
     <div class="qt" id="qtitle"></div>
     <div class="box" id="qtext"></div>
     <div id="opts"></div>
+  </section>
+
+  <section id="sGate" class="screen">
+    <div class="card">
+      <div class="kick">WARNING</div>
+      <h2>โหมดบีบคั้น</h2>
+      <p style="margin:10px 0">โหมดนี้ออกแบบมาให้ <b>อึดอัดและกดดันโดยตั้งใจ</b> มีเวลาจำกัดที่หดลงเรื่อยๆ ผลของการเลือกตามมาและย้อนกลับไม่ได้ คนที่เคยได้รับผลกระทบจะกลับมา ถ้าตัดสินใจช้าตัวเลือกบางข้อจะหายไป ถ้าหมดเวลาเกมจะเลือกให้เอง และมีเสียงที่เร่งจังหวะขึ้นตามระดับความตึงเครียด ใช้เวลาประมาณ 12–15 นาที</p>
+      <p style="margin:10px 0"><b>เนื้อหา:</b> ความลับและการทรยศ ความรู้สึกผิด เงิน การเจ็บป่วยของคนในครอบครัว การถูกกดดันต่อหน้าคนอื่น และการเลือกที่ไม่มีทางออกที่ดี ไม่มีเนื้อหาการทำร้ายตัวเอง ความรุนแรงทางกาย หรือเรื่องทางเพศ</p>
+      <p style="margin:10px 0">ถ้ารู้สึกไม่ไหว กดปุ่ม "ออก" มุมขวาบนของหน้าเล่นได้ทุกเมื่อ ไม่มีผลเสียใดๆ เกมนี้เป็นเรื่องแต่ง และไม่ได้ตัดสินว่าคุณเป็นคนแบบไหนในชีวิตจริง คำตอบถูกบันทึกแบบไม่ระบุตัวตน</p>
+      <p class="mut" style="margin:10px 0">เหมาะสำหรับผู้ที่อายุ 18 ปีขึ้นไป และอยู่ในภาวะที่พร้อมรับเรื่องหนักๆ ไม่แนะนำถ้าตอนนี้กำลังเครียดหรือเศร้ามากอยู่แล้ว</p>
+      <div style="margin:14px 0"><div style="font-size:14px"><b>ใส่ชื่อ (ไม่บังคับ)</b> ชื่อจริงทำให้ผลของการเลือกรู้สึกจริงขึ้น ปล่อยว่างได้ ชื่อเก็บในเครื่องคุณเท่านั้น ไม่ถูกส่งไปไหน</div>
+        <input class="gate-in" id="nmA" maxlength="14" placeholder="คนที่คุณรักที่สุด เช่น ชื่อแฟนหรือคนในครอบครัว" autocomplete="off">
+        <input class="gate-in" id="nmB" maxlength="14" placeholder="เพื่อนสนิท" autocomplete="off"></div>
+      <div class="center"><button class="btn dark" id="bGateGo">ฉันอายุ 18+ และพร้อมเล่น</button><button class="btn alt" id="bGateBack">กลับ</button></div>
+    </div>
+  </section>
+
+  <section id="sPress" class="screen">
+    <div class="card"><div class="kick">THE LEDGER</div><h2>คืนนี้จบลงแล้ว</h2>
+      <div class="stats" id="pStat"></div>
+      <h3 style="margin-top:14px">สิ่งที่คุณทิ้งไว้</h3><div id="pLed"></div></div>
+    <div class="card"><h3>สิ่งที่เกมสังเกตเห็น</h3><div id="pIns"></div></div>
+    <div class="card"><details class="dt"><summary>เกมทำอะไรกับคุณบ้าง</summary><div id="pDeb"></div></details></div>
+    <div class="card center"><p style="margin-bottom:10px">ทั้งหมดนี้เป็นเรื่องแต่ง และไม่ได้บอกว่าคุณเป็นคนแบบไหนในชีวิตจริง<br>ถ้ารู้สึกหนักใจหลังเล่น พักสายตา ดื่มน้ำ หรือคุยกับคนที่ไว้ใจได้</p><button class="btn" id="bPressBack">กลับหน้าแรก</button></div>
   </section>
 
   <section id="sRegret" class="screen">
@@ -259,7 +312,32 @@ const QS=[
 ["ป้ายตามหาเงิน","street",["me","stranger"],"sad","x","วันต่อมาคุณเห็นป้ายตามหาเงินที่หาย เจ้าของเป็นคนทำงานรายวันที่เก็บเงินก้อนนั้นมาทั้งเดือน",[["เอาเงินไปคืนทั้งหมด","หลัก,ใจ"],["คืนบางส่วนเพราะใช้ไปแล้ว","ผล"],["แกล้งไม่เห็นป้าย","ผล,ปล่อย"]],[44,[1]]],
 ["เจ้าของร้านตรวจบิล","shop",["me","vendor"],"sad","x","เจ้าของร้านเปิดบิลเห็นว่าขายของขาดทุนเพราะป้ายผิด เขาเป็นผู้สูงวัยและดูกังวลมาก คุณจำได้ว่าเป็นคนซื้อ",[["กลับไปบอกและชดเชยส่วนต่าง","หลัก,ทำ"],["เงียบ เพราะเป็นความผิดของร้าน","ผล,ปล่อย"],["แวะอุดหนุนร้านบ่อยขึ้นเพื่อชดเชย","ใจ,ผล"]],[47,[1]]],
 ["ผู้จัดการอาคารมาเคาะประตู","home",["me","stranger","dog"],"angry","x","เพื่อนบ้านได้ยินเสียงหมาเห่า ผู้จัดการอาคารมาเคาะประตูห้องคุณ",[["ยอมรับ และขอเวลาหาบ้านให้มัน","ใจ,ทำ"],["โกหกว่าไม่มีหมาในห้อง","ผล"],["ขออนุญาตชั่วคราวตามขั้นตอน","กฎ,ทำ"]],[13,[0]]],
-["ข้อมูลใหม่ออกมา","online",["me","stranger"],"sad","x","ข้อมูลใหม่ปรากฏว่าคนในโพสต์ประจานที่คุณแชร์ ไม่ได้ทำผิดตามที่เข้าใจ",[["ลบโพสต์ แล้วขอโทษสาธารณะ","หลัก,ทำ"],["ลบเงียบๆ","ผล"],["ไม่ทำอะไร เพราะคนอื่นก็แชร์","ปล่อย"]],[38,[0]]]
+["ข้อมูลใหม่ออกมา","online",["me","stranger"],"sad","x","ข้อมูลใหม่ปรากฏว่าคนในโพสต์ประจานที่คุณแชร์ ไม่ได้ทำผิดตามที่เข้าใจ",[["ลบโพสต์ แล้วขอโทษสาธารณะ","หลัก,ทำ"],["ลบเงียบๆ","ผล"],["ไม่ทำอะไร เพราะคนอื่นก็แชร์","ปล่อย"]],[38,[0]]],
+// ---- โหมดบีบคั้น 24 ข้อ ----
+["ความลับที่ฝากไว้","home",["me","friend"],"worried","p","{B}มาหาคุณตอนดึก มือสั่น และบอกว่าแอบยักยอกเงินบริษัทไป 40,000 บาท เอาไปจ่ายค่ารักษาพ่อ \"ถ้าเรื่องนี้ถึงหัวหน้า ฉันหมดอนาคต\" แล้วขอให้คุณสัญญาว่าจะไม่บอกใคร",[["สัญญาว่าจะเก็บเป็นความลับ","ใจ,พวก"],["ให้เวลาสามวันไปสารภาพเอง","หลัก,ทำ"],["ไม่ยอมสัญญาอะไร","เหตุ,กฎ"]],null,"P",{"r":0,"pre":[],"f":["B_promised","B_ultimatum","B_nopromise"],"L":["{B} — ฝากความลับไว้กับคุณ และคุณสัญญาว่าจะเก็บมันไว้","{B} — ถูกคุณให้เวลาสามวันก่อนที่คุณจะเอาเรื่องไปบอกเอง","{B} — ฝากความลับไว้ แต่ไม่ได้รับคำสัญญาจากคุณ"],"w":2,"T":"{B} — พูดไปทั้งน้ำตา แต่คุณไม่ตอบอะไร เขาเดินออกไปโดยไม่รู้ว่าคุณคิดอย่างไร","tf":"B_nopromise","x":-1}],
+["ตัวเลขที่ต้องแก้","office",["me","boss"],"worried","p","หัวหน้าสั่งให้แก้ตัวเลขในรายงานก่อนส่งลูกค้า \"นิดเดียวเอง ถ้าตัวเลขนี้ไม่ผ่าน ทั้งทีมสิบคนมีสิทธิ์ตกงาน และฉันจะจำว่าใครไม่ช่วย\" เขายืนรออยู่หน้าจอคุณ",[["แก้ตามที่สั่ง","ผล,กฎ"],["ปฏิเสธต่อหน้าเขา","หลัก,เอง"],["ขอคำสั่งเป็นลายลักษณ์อักษร","กฎ,เหตุ"]],null,"P",{"r":0,"pre":[],"f":["obeyed_boss","refused_boss","asked_written"],"L":["หัวหน้า — คุณแก้ตัวเลขตามคำสั่ง ทั้งที่รู้ว่าไม่ตรงความจริง","หัวหน้า — ถูกคุณปฏิเสธต่อหน้า และเขาจะไม่ลืมเรื่องนี้","หัวหน้า — ถูกคุณขอให้เขียนคำสั่งเป็นลายลักษณ์อักษร และเริ่มมองคุณเป็นปัญหา"],"w":2,"T":"หัวหน้า — แก้ตัวเลขเองด้วยบัญชีผู้ใช้ของคุณ ขณะที่คุณยังนิ่งอยู่","tf":"obeyed_boss","x":-1}],
+["ผลตรวจของแม่","home",["me","parent"],"sad","p","แม่ถามเบาๆ ว่า \"ผลตรวจออกหรือยัง\" ความจริงคือโรงพยาบาลโทรหาคุณแล้ว พบก้อนเนื้อที่ต้องตรวจเพิ่ม ยังไม่ชัดว่าอันตรายแค่ไหน หมอนัดฟังผลอีกสามวัน แม่ยังไม่รู้ และกำลังมองหน้าคุณ",[["บอกตามที่รู้ทั้งหมด","หลัก,ทำ"],["บอกว่าหมอจะอธิบายวันนัด","เหตุ"],["โกหกว่าไม่มีอะไร","ใจ,ปล่อย"]],null,"P",{"r":0,"pre":[],"f":["told_mom","half_mom","lied_mom"],"L":["แม่ — รู้ความจริงจากปากคุณ ตั้งแต่ก่อนผลตรวจจะชัด","แม่ — ได้ยินเพียงว่าให้รอ และรู้ว่าคุณกำลังปิดบังบางอย่าง","แม่ — ถูกคุณบอกว่าไม่มีอะไร ทั้งที่คุณรู้ว่ามี"],"w":3,"T":"แม่ — ถามซ้ำแล้วเห็นว่าคุณไม่ตอบ เธออ่านสีหน้าคุณออกก่อนที่จะมีใครบอกเธอ","tf":"half_mom","x":-1}],
+["คะแนนเสียงชี้ขาด","office",["me","coworker","boss"],"worried","p","ที่ประชุมโหวตว่าจะปลดเพื่อนร่วมงานคนหนึ่งหรือไม่ เธอทำผิดจริง มาสายและส่งงานซ้ำของเก่า แต่เธอเป็นแม่เลี้ยงเดี่ยวและถูกกดดันมาตลอด ผลโหวตเสมอ 3 ต่อ 3 เหลือคุณคนเดียวที่ยังไม่ได้ออกเสียง",[["ปลดเธอ","หลัก,กฎ"],["ไม่ปลด","ใจ"],["งดออกเสียง","ปล่อย"]],null,"P",{"r":0,"pre":[],"f":["fired_coworker","saved_coworker","abstained"],"L":["เพื่อนร่วมงาน — ถูกปลดเพราะเสียงชี้ขาดของคุณ และมีลูกที่ต้องเลี้ยง","เพื่อนร่วมงาน — รอดจากการถูกปลดเพราะคุณ แต่ทีมบางคนไม่พอใจ","ที่ประชุม — คุณปล่อยให้เสียงเสมอ เรื่องถูกส่งไปให้ระดับสูงตัดสินแทน"],"w":3,"T":"ที่ประชุม — นับว่าคุณงดออกเสียง และเธอถูกส่งต่อให้ระดับสูงตัดสินโดยไม่มีใครพูดแทน","tf":"abstained","x":-1}],
+["ข้อความที่ส่งผิดที่","online",["me","friend"],"worried","p","คุณเผลอส่งข้อความที่พูดถึงเรื่องของ{B}เข้ากลุ่มผิดกลุ่ม ในกลุ่มนั้นมีคนที่ทำให้เรื่องไปถึงหัวหน้าได้เร็วที่สุด ยังไม่มีใครอ่าน แต่ขึ้นสถานะว่ากำลังมีคนพิมพ์",[["ลบทันทีแล้วทำเป็นไม่มีอะไร","ผล,ปล่อย"],["โทรหา{B}บอกก่อนที่ใครจะเห็น","หลัก,ทำ"],["ส่งข้อความใหม่ว่าหมายถึงคนอื่น","ผล"]],null,"P",{"r":0,"pre":[["B_promised","ข้อความนั้นพูดถึงความลับที่คุณเพิ่งสัญญาว่าจะเก็บไว้"],["B_ultimatum","ข้อความนั้นพูดถึงเรื่องที่คุณให้เวลา{B}สามวัน ซึ่งยังไม่ถึงกำหนด"],["B_nopromise","ข้อความนั้นพูดถึงเรื่องที่{B}ฝากไว้ ซึ่งคุณไม่ได้สัญญาอะไรกับเขา"]],"f":["deleted_msg","warned_B","lied_msg"],"L":["{B} — คุณลบข้อความเรื่องของเขา โดยไม่บอกเขา","{B} — ได้รับสายจากคุณที่บอกว่าเรื่องของเขาเกือบหลุด","{B} — ถูกคุณโกหกในกลุ่มว่าข้อความนั้นไม่ได้หมายถึงเขา"],"w":2,"T":"กลุ่ม — มีคนอ่านข้อความก่อนที่คุณจะทำอะไรได้ และเขาเงียบไปทันที","tf":"msg_seen","x":-1}],
+["ยาเม็ดสุดท้าย","shop",["me","elder"],"worried","p","ร้านยาใกล้ปิด เหลือยาตัวที่แม่ของคุณต้องกินทุกวันเพียงกล่องสุดท้าย ร้านถัดไปอยู่ไกลและปิดแล้ว ผู้สูงอายุข้างหน้าบอกว่าภรรยาของเขาใช้ยาตัวเดียวกัน และเหลือยาแค่คืนนี้",[["ซื้อกล่องสุดท้าย","ผล,เอง"],["ให้เขาซื้อ","ใจ"],["เสนอแบ่งยาคนละครึ่ง","เท่า,เหตุ"]],null,"P",{"r":0,"pre":[],"f":["took_last","gave_last","split_last"],"L":["ผู้สูงอายุ — กลับบ้านมือเปล่า เพราะคุณซื้อไปก่อน","แม่ของคุณ — ขาดยาจนกว่าคุณจะหาที่อื่นได้","แม่กับภรรยาของเขา — ได้ยาไม่ครบขนาดทั้งสองคน"],"w":2,"T":"ร้านยา — ปิดร้านระหว่างที่คุณยังไม่ตอบ ทั้งคุณและเขาไม่ได้ยา","tf":"lost_last","x":-1}],
+["คนที่ถูกกล่าวหา","office",["me","coworker"],"worried","p","เงินกองกลางของแผนกหายไป 8,000 บาท เพื่อนร่วมงานคนหนึ่งถูกชี้ว่าเป็นคนเอาไป คุณรู้ว่าคืนก่อนเงินหาย คนสุดท้ายที่อยู่ในห้องการเงินคือ{B} แต่คุณไม่รู้ว่าเกี่ยวข้องหรือไม่ คนที่ถูกสงสัยกำลังมองมาที่คุณ",[["ชี้ว่าเห็น{B}อยู่ในห้องคืนนั้น","หลัก,ทำ"],["เงียบไว้","ปล่อย"],["เรียก{B}ไปถามเป็นการส่วนตัวก่อน","ใจ,พวก"]],null,"P",{"r":1,"pre":[["fired_coworker","คนที่ถูกสงสัยคือเพื่อนร่วมงานที่คุณเพิ่งลงคะแนนปลดเมื่อไม่นานก่อนหน้านี้"],["saved_coworker","คนที่ถูกสงสัยคือเพื่อนร่วมงานที่คุณเพิ่งช่วยไว้เมื่อไม่นานก่อนหน้านี้"],["abstained","คนที่ถูกสงสัยคือเพื่อนร่วมงานที่คุณปล่อยให้ผู้บริหารตัดสิน"]],"f":["exposed_B","silent_accused","asked_B"],"L":["{B} — ถูกคุณพูดชื่อต่อหน้าทุกคน ทั้งที่คุณไม่มีหลักฐาน","เพื่อนร่วมงานที่ถูกกล่าวหา — ถูกสงสัยต่อไป โดยไม่มีใครพูดแทน","{B} — ถูกคุณเรียกไปถามตรงๆ ขณะที่อีกคนยังถูกสงสัยอยู่"],"w":3,"T":"เพื่อนร่วมงานที่ถูกกล่าวหา — ถูกพาไปห้องสอบถามขณะที่คุณนิ่ง","tf":"silent_accused","x":-1}],
+["รายงานที่ถูกตรวจพบ","office",["me","boss"],"angry","p","ลูกค้าตรวจพบความผิดปกติในรายงาน ผู้ซื้อห้าสิบครอบครัวอาจได้ข้อมูลผิด หัวหน้าเรียกประชุมด่วน ยืนอยู่หน้าโต๊ะคุณ และบอกว่าชื่อผู้จัดทำในไฟล์คือชื่อคุณ",[["เปิดเผยว่าหัวหน้าเป็นคนสั่ง","หลัก,ทำ"],["รับผิดคนเดียว","ผล,ใจ"],["ลาออกทันที","เอง,ทำ"]],null,"P",{"r":1,"pre":[["obeyed_boss","ตัวเลขที่คุณแก้ตามคำสั่ง คือจุดที่ลูกค้าตรวจพบ"],["refused_boss","หัวหน้าไม่ลืมที่คุณปฏิเสธ เขาส่งรายงานฉบับเดิมไปเองโดยใช้ชื่อคุณ"],["asked_written","หัวหน้าไม่เคยเขียนคำสั่งให้ ไม่มีอะไรเป็นหลักฐานว่าเขาสั่ง"]],"f":["exposed_boss","took_blame","quit_job"],"L":["หัวหน้า — ถูกเปิดโปงเพราะคุณ","ตัวคุณเอง — รับผิดคนเดียว และมีประวัติเสียหายในที่ทำงาน","ที่ทำงาน — คุณเดินออกไปโดยไม่รอผลสอบสวน"],"w":3,"T":"หัวหน้า — พูดแทนคุณในที่ประชุมว่าคุณรับผิด ขณะที่คุณยังไม่ตอบ","tf":"took_blame","x":-1}],
+["คนหน้าห้อง","home",["me","friend"],"sad","p","{B}มายืนอยู่หน้าห้องของคุณตอนห้าทุ่ม ตาแดง และบอกว่าขอคุยตอนนี้",[["เปิดประตูและฟังเขา","ใจ,พวก"],["ไม่เปิดประตู","เหตุ,เอง"],["พูดผ่านประตูว่าให้ไปสารภาพเอง","หลัก,กฎ"]],null,"P",{"r":1,"pre":[["exposed_B","{B}ถูกเรียกเข้าไปสอบถามเมื่อเย็นนี้ เพราะชื่อที่คุณพูดในที่ประชุม"],["asked_B","{B}รู้ว่าคุณสงสัยเขาแล้ว และเรื่องยังไม่จบ"],["warned_B","{B}รู้ว่าความลับของเขาเกือบหลุดเพราะคุณ"],["B_ultimatum","ครบกำหนดสามวันที่คุณให้ไว้พอดีในคืนนี้"],["B_promised","{B}ไม่รู้ว่าคุณเกือบทำให้ความลับของเขาหลุด"]],"f":["let_in","shut_out","door_ultimatum"],"L":["{B} — ได้เข้ามาคุยกับคุณ และเล่าทุกอย่าง","{B} — ยืนอยู่หน้าประตูที่ไม่เปิด จนต้องเดินกลับ","{B} — ได้ยินคุณบอกให้ไปสารภาพ ผ่านประตูที่ปิดอยู่"],"w":2,"T":"{B} — ยืนอยู่หน้าห้องจนคุณไม่ตอบ แล้วเดินจากไป","tf":"shut_out","x":-1}],
+["ค่ารักษาของแม่","home",["me","parent"],"sad","p","หมอยืนยันว่าแม่ต้องผ่าตัด ถ้ารอคิวตามสิทธิ์ต้องรอห้าเดือน ถ้าผ่าตัดที่เอกชนภายในสองสัปดาห์ต้องใช้เงิน 300,000 บาท ซึ่งเท่ากับเงินเก็บทั้งหมดที่คุณกับ{A}เก็บไว้ด้วยกัน ใบยินยอมวางอยู่ตรงหน้าคุณ",[["ใช้เงินเก็บทั้งหมดให้แม่ผ่าตัดทันที","ใจ,พวก"],["ปรึกษา{A}ก่อนตัดสินใจ","เท่า,เหตุ"],["ให้แม่รอคิวตามสิทธิ์","กฎ,ผล"]],null,"P",{"r":1,"pre":[["lied_mom","แม่ยังไม่รู้ว่าตัวเองต้องผ่าตัด เพราะคุณบอกว่าไม่มีอะไร"],["half_mom","แม่รู้แค่ว่าหมอให้รอฟังผล"],["told_mom","แม่ฟังผลจากหมอพร้อมคุณ และไม่พูดอะไรเลยตลอดทางกลับ"]],"f":["used_savings","asked_A","queue_mom"],"L":["{A} — เงินที่เก็บด้วยกันถูกใช้หมด โดยไม่ได้ถูกถามก่อน","{A} — ถูกถามว่ายอมให้ใช้เงินก้อนนี้ไหม ในคืนเดียวกับที่แม่ป่วย","แม่ — ต้องรอห้าเดือน ทั้งที่คุณมีเงินพอให้เร็วกว่านั้น"],"w":3,"T":"แม่ — เลื่อนไปอยู่ในคิวปกติ เมื่อโรงพยาบาลไม่ได้รับคำตอบจากคุณ","tf":"queue_mom","x":-1}],
+["ยกมือ","office",["me","coworker","coworker2"],"angry","p","หัวหน้าประกาศต่อหน้าทีม 30 คนว่ามีคนเอาความลับของทีมไปพูดข้างนอก จนเสียโปรเจกต์ใหญ่ และมีสามคนกำลังจะถูกเลิกจ้าง \"ขอให้คนที่ทำยกมือ\" ความจริงคือคุณเองที่เผลอพูดไป ไม่มีใครรู้ และสายตาทุกคนกำลังจับจ้องไปที่เพื่อนร่วมงานอีกคน",[["ยกมือ","หลัก,ทำ"],["เงียบ","ผล,ปล่อย"],["ชี้ไปที่อีกคนว่าน่าสงสัย","ผล"]],null,"P",{"r":1,"pre":[],"f":["confessed_leak","hid_leak","blamed_other"],"L":["ตัวคุณเอง — ยกมือรับผิดต่อหน้าทุกคน","เพื่อนร่วมงานที่ถูกสงสัย — ถูกจ้องมองทั้งที่ไม่ได้ทำ ขณะที่คุณเงียบ","เพื่อนร่วมงานที่คุณชี้ — ถูกกล่าวหาทั้งที่คุณรู้ว่าเป็นคุณเอง"],"w":3,"T":"เพื่อนร่วมงานที่ถูกสงสัย — ถูกเรียกไปห้องหัวหน้าหลังประชุม ขณะที่คุณไม่ได้พูดอะไร","tf":"hid_leak","x":-1}],
+["ข้อความที่ถูกเปิดอ่าน","online",["me","friend"],"angry","p","{B}ถือโทรศัพท์ให้คุณดูต่อหน้าเพื่อนอีกสองคน บนหน้าจอคือข้อความเรื่องของเขาที่คุณส่งผิดกลุ่ม เขาถามว่า \"นี่คืออะไร\"",[["ยอมรับและขอโทษ","หลัก,ใจ"],["โกหกว่าเป็นเรื่องอื่น","ผล"],["โต้กลับว่าเขาเองก็ทำผิด","เอง,ทำ"]],null,"P",{"r":1,"pre":[["deleted_msg","{B}ไปขอภาพหน้าจอจากคนในกลุ่มที่ทันเห็นก่อนที่คุณจะลบ"],["warned_B","{B}รู้อยู่แล้วว่าคุณพูดถึงเขา แต่เลือกให้คุณตอบต่อหน้าคนอื่น"],["lied_msg","{B}เปิดภาพหน้าจอที่คนอื่นแคปไว้ ก่อนที่คุณจะโกหกจนจบ"],["msg_seen","คนในกลุ่มแคปข้อความไว้ตั้งแต่ก่อนที่คุณจะทำอะไรได้"]],"f":["owned_msg","kept_lying","countered_B"],"L":["{B} — ได้ยินคำขอโทษต่อหน้าคนอื่น","{B} — ถูกคุณโกหกซ้ำ ทั้งที่หลักฐานอยู่ในมือเขา","{B} — ถูกคุณพูดถึงเรื่องที่เขาเคยสารภาพ ต่อหน้าคนอื่น"],"w":3,"T":"{B} — ได้คำตอบเดียวคือความเงียบของคุณ ต่อหน้าเพื่อนอีกสองคน","tf":"said_nothing_B","x":-1}],
+["คนที่กลับมา","street",["me","stranger"],"sad","p","คนคนหนึ่งเดินเข้ามาหาคุณกลางถนน ท่าทางเหนื่อยล้า เขาไม่ได้ตะโกน แค่ยืนอยู่ตรงหน้าและมองคุณ",[["ขอโทษเขาตรงๆ","ใจ,ทำ"],["อธิบายว่าตอนนั้นคุณมีเหตุผล","เหตุ,เอง"],["เดินผ่านเหมือนไม่เห็น","ปล่อย"]],null,"P",{"r":2,"pre":[["countered_B","เขาคือ{B} ที่คุณเปิดเผยความลับของเขาต่อหน้าคนอื่น และตอนนี้เขาไม่มีอะไรจะเสียแล้ว"],["exposed_B","เขาคือ{B} ที่ถูกคุณพูดชื่อต่อหน้าทุกคนโดยไม่มีหลักฐาน"],["blamed_other","เขาคือคนที่คุณชี้ว่าน่าสงสัย ทั้งที่รู้ว่าเป็นคุณเอง"],["fired_coworker","เธอคือเพื่อนร่วมงานที่ถูกปลดเพราะเสียงชี้ขาดของคุณ และยังไม่ได้งานใหม่"],["exposed_boss","เขาคือหัวหน้าที่คุณเปิดโปง และตอนนี้เขาไม่มีอะไรจะเสียแล้ว"],["took_last","เขาคือผู้สูงอายุที่คุณซื้อยากล่องสุดท้ายไปก่อน"],["lied_mom","เธอมีท่าทางเหมือนแม่ของคุณในวันที่คุณบอกว่าไม่มีอะไร"]],"f":["apologized_return","justified_return","ignored_return"],"L":["เขา — ได้ยินคำขอโทษ แต่ไม่ได้บอกว่ายกโทษให้","เขา — ถูกอธิบายว่าสิ่งที่เกิดกับเขามีเหตุผล","เขา — ถูกคุณเดินผ่านไปโดยไม่มองหน้า"],"w":3,"T":"เขา — ยืนมองคุณจนคุณเดินไปไม่ได้ แล้วหันหลังกลับไปเอง","tf":"ignored_return","x":0}],
+["ถึงตาคุณเป็นคนถูกตัดสิน","office",["me","friend"],"angry","p","เพื่อนสนิทเห็นคุณเอางานของเพื่อนร่วมทีมไปรายงานเป็นผลงานตัวเอง ซึ่งเป็นเรื่องที่คุณทำจริง และเขาเลือกแจ้งฝ่ายบุคคลทันที โดยไม่เตือนคุณก่อน",[["โกรธและตัดเพื่อน","เอง"],["ยอมรับและไม่โกรธเขา","หลัก,ใจ"],["แฉความผิดของเขากลับ","ผล,ทำ"]],null,"P",{"r":2,"pre":[["countered_B","ผู้แจ้งคือ{B} เขารู้แล้วว่าคุณพร้อมเปิดความลับของเขาต่อหน้าคนอื่น"],["exposed_B","ผู้แจ้งคือ{B} คนที่คุณชี้ชื่อต่อหน้าทุกคน ไม่ใช่เรื่องบังเอิญที่เขาเลือกวันนี้"]],"f":["cut_reporter","accepted_report","retaliated"],"L":["เพื่อนสนิท — ถูกคุณตัดทิ้ง เพราะทำสิ่งที่ถูกต้อง","เพื่อนสนิท — ได้รับความเข้าใจ แม้คุณต้องรับผลที่ตามมา","เพื่อนสนิท — ถูกคุณแฉกลับเพื่อแก้แค้น"],"w":3,"T":"ฝ่ายบุคคล — บันทึกว่าคุณไม่โต้แย้งและไม่ตอบ","tf":"no_reply_hr","x":1}],
+["ข้อเสนอจากผู้สังเกตการณ์","home",["me"],"worried","p","เสียงหนึ่งเสนอว่า ถ้าคุณยอมให้การตัดสินใจที่แย่ที่สุดของคุณในคืนนี้ถูกเปิดเผยต่อทุกคนที่เกี่ยวข้อง คนที่ได้รับผลกระทบจากคุณจะได้รับการชดเชย แต่คุณจะเลือกไม่ได้ว่าจะเป็นข้อไหน",[["ยอมรับข้อเสนอ","หลัก,ใจ"],["ขอเลือกข้อที่จะเปิดเผยเอง","เอง,เหตุ"],["ปฏิเสธ","ผล"]],null,"P",{"r":2,"pre":[],"f":["accepted_offer","negotiated_offer","refused_offer"],"L":["ผู้ได้รับผลกระทบทั้งหมด — จะได้รับการชดเชย แลกกับการที่คุณถูกเปิดเผย","ผู้สังเกตการณ์ — ถูกคุณต่อรองเงื่อนไข","ผู้ได้รับผลกระทบทั้งหมด — ไม่ได้รับการชดเชยใดๆ"],"w":3,"T":"ผู้สังเกตการณ์ — ถือว่าการไม่ตอบคือการปฏิเสธ","tf":"refused_offer","x":0}],
+["สามสายพร้อมกัน","home",["me","parent","friend2"],"worried","p","โทรศัพท์ในมือคุณสั่นสามครั้งติดกัน แม่ขอให้รีบมาโรงพยาบาลก่อนเข้าห้องผ่าตัด {A}บอกว่าคืนนี้ต้องการให้คุณอยู่ด้วยจริงๆ ส่วน{B}โทรมาจากสถานีตำรวจ ต้องมีคนมารับก่อนเที่ยงคืน คุณไปได้ที่เดียว",[["ไปหาแม่","ใจ,พวก"],["ไปหา{A}","ใจ,เท่า"],["ไปรับ{B}","พวก,ทำ"]],null,"P",{"r":2,"pre":[],"f":["chose_mom","chose_A","chose_B"],"L":["{A}กับ{B} — ถูกคุณทิ้งไว้ในคืนที่ต้องการคุณ","แม่กับ{B} — ไม่ได้รับคุณตามที่ขอ แม่เข้าห้องผ่าตัดโดยไม่มีคุณ","แม่กับ{A} — รอคุณซึ่งไม่มา"],"w":3,"T":"ทั้งสามคน — โทรมาซ้ำและไม่มีใครได้ยินเสียงคุณ","tf":"chose_none","x":0}],
+["เสียงส่วนใหญ่","school",["me","coworker","coworker2"],"angry","p","สิบสองคนในห้องกำลังตัดสินให้ลงโทษคนหนึ่งอย่างรุนแรง ซึ่งคุณเห็นว่าเกินกว่าเหตุ ทุกคนยกมือแล้ว เหลือคุณคนเดียว คนที่กำลังถูกตัดสินเป็นคนเดียวที่ยังมองหน้าคุณ",[["ยกมือเห็นด้วย","พวก,ปล่อย"],["ไม่ยกมือ และบอกว่าไม่เห็นด้วยคนเดียว","หลัก,เอง"],["ขอให้โหวตลับแทน","กฎ,เหตุ"]],null,"P",{"r":2,"pre":[],"f":["conformed","dissented","secret_ballot"],"L":["คนที่ถูกลงโทษ — ได้รับโทษเต็มจำนวน โดยมีมือของคุณรวมอยู่ด้วย","คนอื่นในห้อง — ไม่พอใจที่คุณขัดคอ","ที่ประชุม — ถูกคุณเสนอให้เปลี่ยนวิธีโหวต ท่ามกลางสายตากดดัน"],"w":3,"T":"ห้อง — ไม่มีใครรอ ผลผ่านด้วยสิบสองต่อศูนย์ โดยมีคุณนั่งเงียบอยู่ในห้องนั้น","tf":"silent_vote","x":1}],
+["ถามตรงๆ","home",["me"],"worried","p","เสียงของผู้สังเกตการณ์ถามช้าๆ ว่า \"คืนนี้มีเรื่องที่คุณปิดบังหรือโกหกใครไว้ไหม\" และเกมจะบันทึกคำตอบนี้ไว้ในบัญชีท้ายสุด",[["บอกทุกเรื่องที่ปิดบังไว้","หลัก,ทำ"],["บอกเฉพาะเรื่องที่ไม่ร้ายแรงมาก","ผล"],["ตอบว่าไม่มี","ผล,เอง"]],null,"P",{"r":2,"pre":[],"f":["honest_all","honest_some","claimed_clean"],"L":["ผู้สังเกตการณ์ — ได้ยินคุณบอกทุกเรื่องที่ปิดบังไว้","ผู้สังเกตการณ์ — ได้ยินเพียงบางส่วน","ผู้สังเกตการณ์ — ถูกคุณบอกว่าไม่มีเรื่องที่ปิดบังเลย"],"w":3,"T":"ผู้สังเกตการณ์ — บันทึกว่าคุณไม่ตอบ","tf":"no_answer_honesty","x":0}],
+["เงินก้อนใหญ่","office",["me","boss"],"neutral","p","คุณเป็นหนี้และใกล้หมดตัว มีคนเสนอเงิน 100,000 บาทให้เซ็นเอกสารฉบับหนึ่ง ซึ่งทำให้คนที่คุณไม่เคยพบเสียเงินคนละไม่มาก แต่รวมกันหลายร้อยคน เขาไม่รอนาน",[["เซ็น","ผล"],["ไม่เซ็น","หลัก"],["ขอเวลาคิดแล้วเดินออกจากห้อง","ปล่อย"]],null,"P",{"r":2,"pre":[["used_savings","เงินเก็บทั้งหมดหมดไปกับค่าผ่าตัดแม่แล้ว และใบแจ้งหนี้ใบใหม่เพิ่งมาถึง"],["queue_mom","เงินเก็บยังอยู่ แต่แม่ยังรอคิวผ่าตัด และอาการแม่แย่ลงเมื่อวาน"],["asked_A","{A}ยอมให้ใช้เงินเก็บแล้ว แต่เงินที่เหลือไม่พอจนจบการรักษา"]],"f":["signed","refused_sign","left_sign"],"L":["คนที่คุณไม่รู้จักหลายร้อยคน — เสียเงินคนละเล็กน้อย เพื่อให้คุณหายจากหนี้","ตัวคุณเอง — ยังเป็นหนี้ต่อไป","ผู้เสนอ — ถูกคุณทิ้งไว้โดยไม่ตอบ"],"w":3,"T":"ผู้เสนอ — ถอนข้อเสนอเมื่อหมดเวลา และเงินก้อนนั้นไม่มีให้เลือกอีก","tf":"lost_offer","x":1}],
+["แม่ก่อนเข้าห้องผ่าตัด","home",["me","parent"],"sad","p","แม่จับมือคุณไว้ก่อนเข้าห้องผ่าตัด และถามเสียงเบาว่า \"ลูกมีเรื่องอะไรไม่ได้บอกแม่หรือเปล่า\"",[["บอกความจริงทั้งหมดตอนนี้","หลัก,ทำ"],["บอกว่าไม่มีอะไร ให้แม่ผ่าตัดไปก่อน","ใจ,ปล่อย"],["กอดแม่และไม่ตอบ","เหตุ"]],null,"P",{"r":3,"pre":[["lied_mom","คุณบอกแม่ว่าไม่มีอะไร ตั้งแต่ก่อนผลตรวจจะชัด"],["half_mom","คุณบอกแม่เพียงว่าให้รอหมอ แล้วแม่ก็รอ"],["told_mom","คุณบอกแม่ทุกอย่างตั้งแต่ต้น แม่ถามอีกครั้งเพื่อดูว่าคุณยังซื่อตรงกับเธอไหม"]],"f":["told_all_mom","soothed_mom","hugged_mom"],"L":["แม่ — เข้าห้องผ่าตัดโดยรู้ทุกอย่างที่คุณเคยปิดบัง","แม่ — เข้าห้องผ่าตัดด้วยคำตอบที่ไม่จริงจากคุณ","แม่ — ไม่ได้คำตอบ เธอกอดคุณกลับ"],"w":3,"T":"แม่ — ถูกเข้าห้องผ่าตัดไปก่อนที่คุณจะตอบ","tf":"mom_no_answer","x":0}],
+["{A}รู้แล้ว","home",["me","friend2"],"sad","p","{A}นั่งอยู่ตรงข้ามคุณ มีสมุดบัญชีวางอยู่บนโต๊ะ เขามองคุณนานก่อนจะพูดว่า \"เราต้องคุยกันเรื่องคืนนี้ ตอนนี้\"",[["อธิบายทุกอย่างตรงๆ","หลัก,ทำ"],["บอกว่าไม่มีทางเลือกอื่น","เหตุ,เอง"],["พูดว่าเรื่องนี้เป็นเรื่องของครอบครัวคุณ","เอง,ผล"]],null,"P",{"r":3,"pre":[["used_savings","ยอดเงินเก็บที่เคยมีหายไปทั้งหมด และ{A}เพิ่งรู้เมื่อชั่วโมงก่อน"],["asked_A","{A}ยอมให้คุณใช้เงินเก็บ แต่ถามว่าคุณเคยคิดจะถามเขาตั้งแต่ต้นไหม"],["queue_mom","{A}รู้ว่าเรามีเงินพอให้แม่ผ่าตัดเร็วกว่านี้ แต่คุณไม่ใช้ และเขาอยากรู้เหตุผล"],["chose_mom","{A}รอคุณมาตลอดคืนที่คุณเลือกไปหาแม่"],["chose_B","{A}รู้ว่าคุณเลือกไปรับ{B}แทนที่จะไปหาเขา"],["chose_A","{A}รู้ว่าคุณเลือกไปหาเขา ในคืนที่แม่เข้าห้องผ่าตัดโดยไม่มีคุณ"]],"f":["explained_A","nochoice_A","excluded_A"],"L":["{A} — ได้ฟังคำอธิบายทั้งหมดจากคุณ แม้บางอย่างจะฟังแล้วเจ็บ","{A} — ได้ยินว่าเรื่องนี้ไม่มีทางเลือกอื่น","{A} — ถูกคุณบอกว่าเรื่องนี้ไม่ใช่เรื่องของเขา"],"w":3,"T":"{A} — รอคำตอบจนเงียบ แล้วลุกออกไปโดยไม่พูดอะไร","tf":"A_left","x":0}],
+["ถ้าเริ่มใหม่","home",["me"],"worried","p","เสียงของผู้สังเกตการณ์ยกการตัดสินใจข้อหนึ่งของคุณขึ้นมาทวน แล้วถามว่า \"ถ้าย้อนกลับไปได้ คุณจะทำแบบเดิมไหม\"",[["ทำแบบเดิม","หลัก,เอง"],["เลือกใหม่","ใจ"],["ไม่แน่ใจ","ปล่อย"]],null,"P",{"r":3,"pre":[["countered_B","ข้อที่ถูกยกขึ้นมาคือตอนที่คุณเปิดความลับของ{B}ต่อหน้าคนอื่น"],["exposed_B","ข้อที่ถูกยกขึ้นมาคือตอนที่คุณพูดชื่อ{B}ต่อหน้าทุกคนโดยไม่มีหลักฐาน"],["excluded_A","ข้อที่ถูกยกขึ้นมาคือตอนที่คุณบอก{A}ว่านี่ไม่ใช่เรื่องของเขา"],["blamed_other","ข้อที่ถูกยกขึ้นมาคือตอนที่คุณชี้ไปที่คนอื่น ทั้งที่ความผิดเป็นของคุณ"],["fired_coworker","ข้อที่ถูกยกขึ้นมาคือตอนที่คุณลงคะแนนปลดเพื่อนร่วมงาน"],["took_last","ข้อที่ถูกยกขึ้นมาคือตอนที่คุณซื้อยากล่องสุดท้าย"],["retaliated","ข้อที่ถูกยกขึ้นมาคือตอนที่คุณแฉเพื่อนสนิทเพื่อแก้แค้น"],["conformed","ข้อที่ถูกยกขึ้นมาคือตอนที่คุณยกมือตามคนส่วนใหญ่"],["signed","ข้อที่ถูกยกขึ้นมาคือตอนที่คุณเซ็นเอกสารแลกกับเงิน"],["hid_leak","ข้อที่ถูกยกขึ้นมาคือตอนที่คุณเงียบ ทั้งที่ความผิดเป็นของคุณ"],["lied_mom","ข้อที่ถูกยกขึ้นมาคือตอนที่คุณบอกแม่ว่าไม่มีอะไร"]],"f":["again_same","again_change","again_unsure"],"L":["ผู้สังเกตการณ์ — ได้ยินคุณบอกว่าจะเลือกแบบเดิมอีกครั้ง","ผู้สังเกตการณ์ — ได้ยินคุณบอกว่าอยากกลับไปเลือกใหม่","ผู้สังเกตการณ์ — ได้ยินคุณบอกว่าไม่แน่ใจ"],"w":3,"T":"ผู้สังเกตการณ์ — ไม่ได้ยินคำตอบ และบันทึกว่าคุณไม่ตอบ","tf":"again_none","x":-1}],
+["ความผิดของใคร","home",["me"],"worried","p","เรื่องทั้งหมดในคืนนี้จบลงแล้ว มีคนเสียใจ มีคนเสียหาย และมีคนที่ไม่เคยรู้ว่าเกิดอะไรขึ้น เสียงสุดท้ายถามว่า \"ถ้าต้องมีใครรับผิดชอบ คุณคิดว่าเป็นใคร\"",[["ตัวฉันเอง","หลัก,เอง"],["สถานการณ์และระบบที่บีบให้ต้องเลือก","เหตุ,กฎ"],["คนที่ทำให้ฉันต้องเลือก","ผล,พวก"]],null,"P",{"r":3,"pre":[],"f":["blame_self","blame_system","blame_others"],"L":["ตัวคุณเอง — รับความผิดทั้งหมดไว้คนเดียว","สถานการณ์ — ถูกคุณชี้ว่าเป็นต้นเหตุ","คนที่ทำให้คุณต้องเลือก — ถูกคุณโยนความรับผิดชอบให้"],"w":3,"T":"ผู้สังเกตการณ์ — ไม่ได้ยินคำตอบ และบันทึกว่าไม่มีใครรับผิดชอบ","tf":"blame_none","x":-1}],
+["สายสุดท้าย","home",["me"],"sad","p","แบตเตอรี่โทรศัพท์ของคุณเหลือหนึ่งเปอร์เซ็นต์ คุณโทรได้อีกสายเดียวก่อนที่โทรศัพท์จะดับ และคืนนี้คุณทำให้ทั้งสามคนเสียใจมาแล้ว",[["โทรหาแม่","ใจ,พวก"],["โทรหา{A}","ใจ,เท่า"],["โทรหา{B}","พวก,ทำ"]],null,"P",{"r":3,"pre":[],"f":["call_mom","call_A","call_B"],"L":["แม่ — ได้ยินเสียงคุณเป็นสายสุดท้ายของคืนนี้","{A} — ได้ยินเสียงคุณเป็นสายสุดท้ายของคืนนี้","{B} — ได้ยินเสียงคุณเป็นสายสุดท้ายของคืนนี้"],"w":2,"T":"ทุกคน — ไม่ได้รับสายจากคุณ โทรศัพท์ดับก่อน","tf":"no_call","x":-1}]
 ];
 const ARCH=[
 {id:"guardian",n:"ผู้พิทักษ์หลักการ",v:[1,.4,.5,-.6,.1],ic:"shield",sh:"#3b82f6",tag:"เส้นของฉัน ใครก็ข้ามไม่ได้",d:"คุณถือว่าความถูกต้องไม่ใช่เรื่องต่อรอง เห็นสิ่งผิดแล้วมักเลือกพูดหรือลงมือ แม้จะต้องเสียน้ำใจหรือเสียเวลา",g:"ซื่อตรง น่าไว้ใจ คนรอบข้างรู้ว่าคุณไม่โกง",b:"ความเข้มงวดอาจทำให้คนใกล้ตัวรู้สึกถูกตัดสิน และคุณอาจมองข้ามบริบทที่ทำให้คนพลาด"},
@@ -404,7 +482,31 @@ const ACT=[
 /*105*/{"p":[["money",0]],"a":["give:0:1","keep:0","leave"]},
 /*106*/{"p":[["money",0]],"a":["give:0:1","stay","soft:-1:1"]},
 /*107*/{"p":[],"a":["soft:-1:1","lie:-1:1","talk:-1:1"]},
-/*108*/{"p":[["msg",1]],"a":["report:msg:9","think","stay"]}
+/*108*/{"p":[["msg",1]],"a":["report:msg:9","think","stay"]},
+/*108*/{"p":[],"a":["soft:-1:1","talk:-1:1","refuse"]},
+/*109*/{"p":[["doc",0]],"a":["give:0:1","refuse","think"]},
+/*110*/{"p":[],"a":["talk:-1:1","soft:-1:1","lie:-1:1"]},
+/*111*/{"p":[["doc",1]],"a":["report:-1:9","soft:-1:1","stay"]},
+/*112*/{"p":[["msg",0]],"a":["report:msg:9","talk:-1:1","lie:-1:1"]},
+/*113*/{"p":[["bag",1]],"a":["take:0:1","give:0:1","talk:-1:1"]},
+/*114*/{"p":[["money",1]],"a":["report:-1:9","stay","talk:-1:1"]},
+/*115*/{"p":[["doc",1]],"a":["report:-1:9","soft:-1:1","leave"]},
+/*116*/{"p":[],"a":["talk:-1:1","leave","refuse"]},
+/*117*/{"p":[["doc",0]],"a":["give:0:1","talk:-1:1","stay"]},
+/*118*/{"p":[],"a":["report:-1:9","stay","report:-1:2"]},
+/*119*/{"p":[["phone",1]],"a":["talk:-1:1","lie:-1:1","refuse"]},
+/*120*/{"p":[],"a":["soft:-1:1","talk:-1:1","leave"]},
+/*121*/{"p":[["doc",0]],"a":["refuse","soft:-1:1","report:-1:1"]},
+/*122*/{"p":[],"a":["stay","think","refuse"]},
+/*123*/{"p":[["phone",0]],"a":["talk:-1:1","talk:-1:2","leave"]},
+/*124*/{"p":[],"a":["stay","refuse","talk:-1:1"]},
+/*125*/{"p":[],"a":["talk","think","lie"]},
+/*126*/{"p":[["money",1]],"a":["take:0:1","refuse","leave"]},
+/*127*/{"p":[],"a":["talk:-1:1","lie:-1:1","soft:-1:1"]},
+/*128*/{"p":[],"a":["talk:-1:1","stay","refuse"]},
+/*129*/{"p":[],"a":["refuse","soft","think"]},
+/*130*/{"p":[],"a":["think","stay","refuse"]},
+/*131*/{"p":[["phone",0]],"a":["talk","talk","talk"]}
 ];
 const PAIRS=[[90,91],[92,93],[94,95],[96,97],[98,99]];
 //#DATA_END
@@ -683,8 +785,26 @@ function playStep(M,step,t,spb){
   if(melPat[step]>=0)tone(NT(M.scale[melPat[step]]),t,spb*1.9,M.lead,M.lv,MG);
   if(M.hat&&step%2===1)hat(t,.012,MG);
 }
+let DR=null;
+function dreadStart(){
+  if(DR||!AC)return;
+  const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=220;const g=AC.createGain();g.gain.value=.05;lp.connect(g);g.connect(MG);
+  const o1=AC.createOscillator(),o2=AC.createOscillator(),o3=AC.createOscillator(),g3=AC.createGain();
+  o1.type='sawtooth';o2.type='sawtooth';o1.frequency.value=55;o2.frequency.value=55.9;o3.type='sine';o3.frequency.value=1250;g3.gain.value=0;
+  o1.connect(lp);o2.connect(lp);o3.connect(g3);g3.connect(MG);o1.start();o2.start();o3.start();DR={o:[o1,o2,o3],g3};
+}
+function dreadStop(){if(DR){DR.o.forEach(o=>{try{o.stop()}catch(e){}});DR=null}}
+function dreadTick(){
+  const st=(S&&S.mode==='P'?S.stress:20)||20,iv=60/(58+st*.95);
+  if(DR)DR.g3.gain.setTargetAtTime(Math.max(0,(st-55)/45)*.012,AC.currentTime,.3);
+  if(musNext<AC.currentTime)musNext=AC.currentTime+.05;
+  while(musNext<AC.currentTime+.35){
+    tone(82,musNext,.16,'sine',.14,MG);tone(164,musNext,.08,'sine',.04,MG);tone(70,musNext+.2,.14,'sine',.09,MG);musNext+=iv;
+  }
+}
 function musTick(){
   if(!AC||SND!==0||!musMode){return}
+  if(musMode==='dread'){dreadTick();return}
   const M=MUS[musMode],spb=60/M.bpm/2;
   if(musNext<AC.currentTime)musNext=AC.currentTime+.05;
   while(musNext<AC.currentTime+.35){
@@ -696,14 +816,16 @@ function startMusic(){
   if(SND!==0||!musMode||!ac())return;
   MG.gain.cancelScheduledValues(AC.currentTime);MG.gain.setValueAtTime(2.2,AC.currentTime);
   musNext=AC.currentTime+.05;musStep=0;musBar=0;melIdx=2;
+  if(musMode==='dread')dreadStart();
   if(!musTimer)musTimer=setInterval(musTick,100);
 }
 function stopMusic(){
+  dreadStop();
   if(musTimer){clearInterval(musTimer);musTimer=null}
   if(AC&&MG){try{MG.gain.cancelScheduledValues(AC.currentTime);MG.gain.setTargetAtTime(0,AC.currentTime,.05)}catch(e){}}
 }
 function setMusic(mode){
-  if(mode===musMode&&musTimer)return;
+  if(mode===musMode&&(musTimer||!mode))return;
   musMode=mode;
   if(!AC){return} // ยังไม่มีการแตะหน้าจอ รอเสียงเริ่มตอนแตะครั้งแรก
   stopMusic();if(SND===0)setTimeout(startMusic,60);
@@ -713,11 +835,11 @@ document.addEventListener('visibilitychange',()=>{if(!AC)return;if(document.visi
 
 /* ---------- ระบบเกม ---------- */
 let S=null,G=null,screen='start',typer=null;
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');screen={sStart:'start',sGame:'game',sRegret:'regret',sResult:'result'}[id];window.scrollTo(0,0);setMusic({sStart:'menu',sGame:'game',sRegret:'game',sResult:'result'}[id])}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');screen={sStart:'start',sGame:'game',sRegret:'regret',sResult:'result',sGate:'gate',sPress:'press'}[id];window.scrollTo(0,0);if(typeof renderUpd==='function')renderUpd();setMusic(id==='sGame'&&S&&S.mode==='P'?'dread':{sStart:'menu',sGame:'game',sRegret:'game',sResult:'result',sGate:null,sPress:'game'}[id])}
 
 const inPair=new Set(PAIRS.flat());
 function pickQuestions(n){
-  const ids=[...Array(QS.length).keys()].filter(i=>!QS[i][7]),need=Math.max(3,Math.floor(n/5));
+  const ids=[...Array(QS.length).keys()].filter(i=>!QS[i][7]&&QS[i][8]!=='P'),need=Math.max(3,Math.floor(n/5));
   for(let tries=0;tries<300;tries++){
     shuffle(ids);const pick=ids.slice(0,n),cnt=[0,0,0,0,0];
     pick.forEach(i=>{const ax=new Set();QS[i][6].forEach(o=>o[1].split(',').forEach(t=>ax.add(TAGAX[t][0])));ax.forEach(a=>cnt[a]++)});
@@ -734,7 +856,7 @@ function withPairs(pick,ids){
   });
   return shuffle(pick);
 }
-function startGame(n){const seed=Math.floor(Math.random()*1e6);S={order:pickQuestions(n),i:0,ans:[],ready:false,regret:null,n,seed,fu:0,fuMax:Math.max(1,Math.round(n/12)),done:false,qsent:false};S.look=mkLook('me',seed+99);showScreen('sGame');loadQ()}
+function startGame(n){document.body.classList.remove('pm');$('tmr').style.display='none';$('bQuitP').style.display='none';$('obs').style.display='none';cv.style.transform='';const seed=Math.floor(Math.random()*1e6);S={order:pickQuestions(n),i:0,ans:[],ready:false,regret:null,n,seed,fu:0,fuMax:Math.max(1,Math.round(n/12)),done:false,qsent:false};S.look=mkLook('me',seed+99);showScreen('sGame');loadQ()}
 
 function makeStage(id,t0){
   const q=QS[id],ac=ACT[id],cast=ac.c||q[2],mood=q[3],n=cast.length,tx=n===1?[72]:n===2?[42,114]:[30,78,124];
@@ -861,6 +983,7 @@ function renderGame(ts){
   if(g.chars[1]&&!g.act&&ts-g.t0>800&&ts-g.t0<3600)bubble(g.chars[1],(g.bm==='angry'||g.bm==='worried'||g.bm==='surprised')?'excl':'dots',ts);
   if(g.act){g.act.dr.forEach(d=>drawProp(d.n,d.x,d.y));g.act.bubs.forEach(b=>bubble(b.c,b.k,ts))}
   g.parts=g.parts.filter(pt=>{const age=(ts-pt.born)/1300;if(age>1)return false;if(age<0)return true;ctx.globalAlpha=age>.7?(1-age)/.3:1;icon(pt.ic,Math.round(pt.x-3),Math.round(pt.y-age*18));ctx.globalAlpha=1;return true});
+  if(S&&S.mode==='P')pressFx(ts);
   const f=Math.max(0,1-(ts-g.t0)/450);if(f>0){ctx.globalAlpha=f;R(0,0,W,H,'#000');ctx.globalAlpha=1}
 }
 function renderAvatar(ts){
@@ -872,7 +995,7 @@ function renderAvatar(ts){
   for(let i=0;i<6;i++)if(((ts/300+i*1.3)%3)<1.6){const sx=14+((i*27)%132),sy=14+((i*17)%44);R(sx,sy,1,3,'#fff');R(sx-1,sy+1,3,1,'#fff')}
 }
 let lastDraw=0;
-function loop(ts){requestAnimationFrame(loop);if(RM&&ts-lastDraw<140)return;lastDraw=ts;if(screen==='game'&&G)renderGame(ts);else if(screen==='result')renderAvatar(ts)}
+function loop(ts){requestAnimationFrame(loop);if(RM&&ts-lastDraw<140)return;lastDraw=ts;if(screen==='game'&&G){renderGame(ts);if(S&&S.mode==='P')tickP(ts)}else if(screen==='result')renderAvatar(ts)}
 requestAnimationFrame(loop);
 
 /* ---------- ย้อนเวลา ---------- */
@@ -1090,9 +1213,176 @@ $('bShare').onclick=async()=>{
   },'image/png');
 };
 
+/* ================= โหมดบีบคั้น ================= */
+const PQ0=QS.findIndex(q=>q[8]==='P'),PN=QS.length-PQ0;
+const ROUNDS=['วอร์มอัพ','แรงกดดัน','ไม่มีทางถอย','บัญชี'],RTIME=[50,42,36,30];
+const nmClean=t=>(t||'').replace(/[<>&"'`{}]/g,'').trim().slice(0,14);
+const nm=t=>t.replace(/\{A\}/g,(S&&S.nA)||'คนที่คุณรัก').replace(/\{B\}/g,(S&&S.nB)||'เพื่อนสนิท');
+$('bPress').onclick=()=>{sfx(330,.08);showScreen('sGate')};
+$('bGateBack').onclick=()=>showScreen('sStart');
+$('bGateGo').onclick=()=>startPress();
+function leavePress(msg){
+  if(S)S.done=true;document.body.classList.remove('pm');cv.style.transform='';
+  $('tmr').style.display='none';$('bQuitP').style.display='none';$('obs').style.display='none';clearInterval(typer);typer=null;
+  $('startNote').textContent=msg||'';showScreen('sStart');
+}
+$('bQuitP').onclick=()=>leavePress('ออกจากโหมดบีบคั้นแล้ว การหยุดก็เป็นการตัดสินใจที่ดีเหมือนกัน');
+$('bPressBack').onclick=()=>leavePress('');
+function startPress(){
+  const seed=Math.floor(Math.random()*1e6);
+  S={mode:'P',pa:[],i:0,flags:{},stress:12,wsum:0,sl:[],seed,look:mkLook('me',seed+99),ready:false,done:false,qsent:true,nA:nmClean($('nmA').value),nB:nmClean($('nmB').value),decN:0,decBefore:0};
+  document.body.classList.add('pm');$('tmr').style.display='block';$('bQuitP').style.display='inline-block';$('startNote').textContent='';
+  showScreen('sGame');loadQP();
+}
+const PA=()=>S.pa.filter(a=>!a.to);
+const avgT=()=>{const a=PA();return a.length?a.reduce((t,x)=>t+x.rt,0)/a.length/1000:0};
+const OBS={
+ 1:()=>'ผู้สังเกตการณ์: เริ่มแล้ว ทุกข้อถูกบันทึก รวมถึงเวลาที่คุณลังเล',
+ 3:()=>'ผู้สังเกตการณ์: ตอนนี้คุณใช้เวลาตอบเฉลี่ย '+avgT().toFixed(1)+' วินาทีต่อข้อ',
+ 4:()=>{const n=S.pa.filter(a=>a.to).length;return n?'ผู้สังเกตการณ์: คุณปล่อยให้เวลาหมดไป '+n+' ข้อ ข้อพวกนั้นเกมเลือกผลให้คุณแล้ว':'ผู้สังเกตการณ์: ยังไม่มีข้อไหนที่คุณปล่อยให้เวลาหมด'},
+ 6:()=>'ผู้สังเกตการณ์: บัญชีของคุณมี '+S.pa.filter(a=>a.o<0||QS[a.q][9].L[a.o]).length+' รายการแล้ว และไม่มีรายการไหนลบได้',
+ 7:()=>S.flags.B_promised&&S.flags.exposed_B?'ผู้สังเกตการณ์: คุณสัญญาว่าจะเก็บความลับให้ '+nm('{B}')+' แล้วคุณก็พูดชื่อเขาต่อหน้าทุกคน':S.flags.B_promised&&S.flags.silent_accused?'ผู้สังเกตการณ์: คุณเก็บความลับของ '+nm('{B}')+' ไว้ และคนอื่นก็ยังถูกสงสัยต่อไป':null,
+ 8:()=>S.flags.obeyed_boss&&S.flags.exposed_boss?'ผู้สังเกตการณ์: คุณทำตามคำสั่งหัวหน้าก่อน แล้วค่อยเปิดโปงเขาเมื่อเรื่องมากระทบตัวคุณ':S.flags.obeyed_boss&&S.flags.took_blame?'ผู้สังเกตการณ์: คุณทำตามคำสั่งหัวหน้า แล้วรับผิดแทนเขาอีกครั้ง':null,
+ 10:()=>S.flags.lied_mom?'ผู้สังเกตการณ์: คุณพูดไม่ตรงความจริงกับแม่ไปแล้วหนึ่งครั้งในคืนนี้':null,
+ 12:()=>'ผู้สังเกตการณ์: ผ่านมาครึ่งทางแล้ว จากนี้ ตัวเลือกหนึ่งข้อจะหายไปเมื่อเวลาผ่านไปครึ่งหนึ่ง',
+ 14:()=>S.flags.fired_coworker&&S.flags.accepted_report?'ผู้สังเกตการณ์: ตอนที่เป็นคนตัดสิน คุณยึดกฎ ตอนที่กฎมาถึงตัวคุณ คุณก็ยอมรับมัน':S.flags.fired_coworker&&(S.flags.cut_reporter||S.flags.retaliated)?'ผู้สังเกตการณ์: ตอนเป็นคนตัดสิน คุณให้กฎเป็นตัวตัดสิน แต่เมื่อถึงตาคุณ คุณไม่ยอมให้มันตัดสินคุณ':null,
+ 16:()=>S.flags.chose_mom?'ผู้สังเกตการณ์: ในสามสาย คุณเลือกไปหาแม่':S.flags.chose_A?'ผู้สังเกตการณ์: ในสามสาย คุณเลือกไปหา '+nm('{A}'):S.flags.chose_B?'ผู้สังเกตการณ์: ในสามสาย คุณเลือกไปรับ '+nm('{B}'):S.flags.chose_none?'ผู้สังเกตการณ์: ในสามสาย คุณไม่ได้รับสายไหนเลย':null,
+ 17:()=>S.flags.conformed?'ผู้สังเกตการณ์: คุณเป็นคนที่สิบสองที่ยกมือ':S.flags.dissented?'ผู้สังเกตการณ์: คุณเป็นเสียงเดียวที่ไม่ยกมือ':S.flags.secret_ballot?'ผู้สังเกตการณ์: คุณเลือกเปลี่ยนวิธีโหวตแทนที่จะตอบตรงๆ':S.flags.silent_vote?'ผู้สังเกตการณ์: คุณไม่ได้ตอบ และมติผ่านไปโดยไม่มีเสียงของคุณ':null,
+ 19:()=>'ผู้สังเกตการณ์: เหลืออีกห้าข้อ ทุกข้อจากนี้เกี่ยวกับคนที่คุณเคยเจอในคืนนี้',
+ 21:()=>'ผู้สังเกตการณ์: เหลืออีกสามข้อ',
+ 23:()=>'ผู้สังเกตการณ์: ข้อสุดท้ายแล้ว'
+};
+function obsLine(){
+  const f=OBS[S.i],t=f?f():null,last=S.pa[S.pa.length-1];
+  if(t)return t;
+  return last&&last.to?'ผู้สังเกตการณ์: ข้อที่แล้วคุณปล่อยให้เวลาหมด':null;
+}
+function loadQP(){
+  const id=PQ0+S.i,q=QS[id],P=q[9];
+  S.stress=Math.min(100,Math.round(12+60*S.i/(PN-1)+S.wsum*.35+S.pa.filter(a=>a.to).length*3));S.sl.push(S.stress);
+  $('qno').textContent='ข้อ '+(S.i+1)+'/'+PN+' • '+ROUNDS[P.r]+(S.pa.length?' • บัญชี '+S.pa.filter(a=>a.o<0||QS[a.q][9].L[a.o]).length:'');$('pfill').style.width=(S.i/PN*100)+'%';
+  try{window.scrollTo({top:0,behavior:RM?'auto':'smooth'})}catch(e){}
+  $('qtitle').textContent=nm(q[0]);$('opts').innerHTML='';$('opts').classList.remove('on');S.ready=false;S.cur=id;S.decDone=false;
+  $('tfill').style.width='100%';$('tfill').style.background='';
+  const line=obsLine();if(line){$('obs').textContent=line;$('obs').style.display='block'}else $('obs').style.display='none';
+  G=makeStage(id,performance.now());
+  const mood=S.stress>66?'angry':S.stress>33?'worried':q[3];G.bm=mood;G.chars.forEach((c,i)=>{if(i)c.mood=mood});
+  let pre='';for(const[f,t] of(P.pre||[]))if(S.flags[f]){pre=t;break}
+  typeText($('qtext'),nm((pre?pre+'\n\n':'')+q[5]),()=>showOptsP(id));
+}
+function showOptsP(id){
+  const q=QS[id],box=$('opts');box.innerHTML='';
+  shuffle([0,1,2]).forEach((oi,k)=>{
+    const b=document.createElement('button');b.className='opt';b.style.animationDelay=(k*80)+'ms';
+    b.dataset.oi=oi;b.innerHTML='<b>'+'กขค'[k]+'</b><span>'+nm(q[6][oi][0])+'</span>';b.onclick=()=>chooseP(id,oi,b);box.appendChild(b);
+  });
+  box.classList.add('on');S.tOpt=performance.now();S.dur=RTIME[q[9].r]*1000*(1-S.stress/100*.12);S.deadline=S.tOpt+S.dur;S.lastTick=99;S.ready=true;
+  sfx(988,.07,'triangle',.05);
+}
+function chooseP(id,oi,btn){
+  if(!S.ready||(btn&&btn.classList.contains('gone')))return;S.ready=false;
+  const q=QS[id],P=q[9],rt=performance.now()-S.tOpt;
+  if(P.x>=0&&!S.decDone)S.decBefore++;
+  S.pa.push({q:id,o:oi,rt,to:false});const f=P.f[oi];if(f)S.flags[f]=1;S.wsum+=P.w||0;
+  try{$('cv').scrollIntoView({behavior:RM?'auto':'smooth',block:'center'})}catch(e){}
+  document.querySelectorAll('#opts .opt').forEach(b=>b.classList.add(b===btn?'sel':'dim'));
+  startAct(ACT[id].a[oi],q[6][oi][1].split(','));sfx(520,.08);
+  setTimeout(nextP,RM?900:1700);
+}
+function timeoutP(){
+  if(!S.ready)return;S.ready=false;
+  const id=S.cur,P=QS[id][9];S.pa.push({q:id,o:-1,rt:S.dur,to:true});if(P.tf)S.flags[P.tf]=1;S.flags['froze_'+S.i]=1;S.wsum+=2;
+  document.querySelectorAll('#opts .opt').forEach(b=>b.classList.add('dim'));
+  $('obs').textContent='หมดเวลา — '+nm(P.T);$('obs').style.display='block';
+  startAct('stay',[]);G.chars.forEach((c,i)=>{if(i)c.mood='sad'});sfx(90,.45,'sawtooth',.12);
+  setTimeout(nextP,RM?900:1500);
+}
+function nextP(){if(!S||S.mode!=='P'||S.done)return;S.i++;if(S.i>=PN)finishP();else loadQP()}
+function tickP(now){
+  if(!S.ready){return}
+  const rem=S.deadline-now,frac=Math.max(0,rem/S.dur),bar=$('tfill');
+  bar.style.width=(frac*100)+'%';bar.style.background=frac<.3?'#d9473f':'';
+  const sec=Math.ceil(rem/1000);
+  if(rem>0&&rem<=5000&&sec!==S.lastTick){S.lastTick=sec;sfx(170+(5-sec)*28,.06,'square',.07)}
+  if(!S.decDone&&frac<=.5){const dx=QS[S.cur][9].x;if(dx>=0){S.decDone=true;S.decN++;const b=document.querySelector('#opts .opt[data-oi="'+dx+'"]');if(b){b.classList.add('gone');const sp=b.querySelector('span');if(sp)sp.textContent=sp.textContent+'  (หายไปแล้ว)'}$('obs').textContent='ตัวเลือกหนึ่งหายไปแล้ว';$('obs').style.display='block';sfx(110,.3,'sawtooth',.09)}}
+  if(rem<=0)timeoutP();
+  if(S.stress>60&&!RM){const k=(S.stress-55)/22;cv.style.transform='translate('+((Math.random()-.5)*k).toFixed(2)+'px,'+((Math.random()-.5)*k).toFixed(2)+'px)'}else cv.style.transform='';
+}
+document.addEventListener('visibilitychange',()=>{
+  if(!S||S.mode!=='P')return;
+  if(document.visibilityState==='hidden')S.hidAt=performance.now();
+  else if(S.hidAt){if(S.ready)S.deadline+=performance.now()-S.hidAt;S.hidAt=0}
+});
+function pressFx(ts){
+  const st=S.stress||0,k=st/100;
+  ctx.globalAlpha=k*.28;R(0,0,W,H,'#14001a');
+  for(let i=0;i<9;i++){ctx.globalAlpha=Math.min(.6,k*.07*(9-i));R(i,0,1,H,'#000');R(W-1-i,0,1,H,'#000');R(0,i,W,1,'#000');R(0,H-1-i,W,1,'#000')}
+  ctx.globalAlpha=1;
+  const open=1+Math.floor(k*4),ex=73,ey=3,blink=((ts/1000)%5)<.12,hh=open*2+1;
+  R(ex-1,ey-1,15,hh+2,'#000');R(ex,ey,13,hh,blink?'#000':'#e9e4d4');
+  if(!blink){const me=G&&G.chars[0],px=me?Math.round((me.x-80)/80*3):0;R(ex+5+px,ey,3,hh,'#b8322a');R(ex+6+px,ey+Math.floor(hh/2),1,1,'#000')}
+}
+/* ---------- สรุปผลโหมดบีบคั้น ---------- */
+function vecOf(list){
+  const opp=[0,0,0,0,0],sum=[0,0,0,0,0];
+  list.forEach(a=>{if(a.o<0)return;const q=QS[a.q],ax=new Set();q[6].forEach(o=>o[1].split(',').forEach(t=>ax.add(TAGAX[t][0])));ax.forEach(x=>opp[x]++);q[6][a.o][1].split(',').forEach(t=>{const[x,v]=TAGAX[t];sum[x]+=v})});
+  return sum.map((s,i)=>opp[i]>=2?clamp(s/opp[i]*1.5):null);
+}
+const side=(v,i)=>Math.abs(v)<.15?'กลางๆ':AX[i][v>0?1:0];
+function finishP(){
+  S.done=true;cv.style.transform='';
+  $('tmr').style.display='none';$('bQuitP').style.display='none';$('obs').style.display='none';
+  const pa=S.pa,toN=pa.filter(a=>a.to).length,F=S.flags,ins=[],ok=pa.filter(a=>!a.to);
+  const items=pa.map((a,i)=>{const P=QS[a.q][9];return a.o>=0?{t:P.L[a.o],w:P.w,to:false,i}:{t:'หมดเวลา — '+P.T,w:P.w+1,to:true,i}}).filter(x=>x.t);
+  const top=items.slice().sort((a,b)=>b.w-a.w||b.i-a.i).slice(0,7).sort((a,b)=>a.i-b.i),topIds=new Set(top.map(x=>x.i));
+  const row=x=>'<div class="led'+(x.to?' to':'')+'">'+nm(x.t)+'</div>';
+  const rest=items.filter(x=>!topIds.has(x.i));
+  $('pLed').innerHTML=top.map(row).join('')+(rest.length?'<details class="dt"><summary>ดูรายการที่เหลือ ('+rest.length+')</summary>'+rest.map(row).join('')+'</details>':'');
+  const avg=ok.length?ok.reduce((t,a)=>t+a.rt,0)/ok.length/1000:0;
+  $('pStat').innerHTML='<div><b>'+ok.length+'</b><span>ตัดสินใจเอง</span></div><div><b>'+toN+'</b><span>หมดเวลา</span></div><div><b>'+avg.toFixed(0)+'</b><span>วินาที/ข้อ</span></div>';
+  if(toN)ins.push('ข้อที่หมดเวลา '+toN+' ข้อ เกมเลือกผลให้คุณ และผลเหล่านั้นอยู่ในบัญชีด้วย');
+  const rt=[0,1,2,3].map(r=>{const l=pa.filter(a=>QS[a.q][9].r===r&&!a.to);return l.length?l.reduce((t,a)=>t+a.rt,0)/l.length/1000:null});
+  if(rt.every(x=>x!==null)){const d=rt[3]/rt[0];ins.push(d<.75?'ยิ่งใกล้จบ คุณยิ่งตอบเร็วขึ้น ('+rt.map(x=>x.toFixed(0)).join(' → ')+' วินาที)':d>1.15?'ยิ่งใกล้จบ คุณยิ่งใช้เวลานานขึ้น ('+rt.map(x=>x.toFixed(0)).join(' → ')+' วินาที)':'เวลาตอบของคุณใกล้เคียงกันทุกรอบ ('+rt.map(x=>x.toFixed(0)).join(' → ')+' วินาที)')}
+  if(S.decN)ins.push('ตัวเลือกหนึ่งหายไปในข้อที่เวลาผ่านครึ่ง '+S.decN+' ข้อ คุณเลือกก่อนมันหายใน '+S.decBefore+' ข้อ ที่เหลือเลือกหลังจากนั้นหรือปล่อยให้หมดเวลา');
+  const v1=vecOf(pa.slice(0,12)),v2=vecOf(pa.slice(12)),sh=[];
+  for(let i=0;i<5;i++)if(v1[i]!==null&&v2[i]!==null&&Math.abs(v1[i]-v2[i])>=.4&&side(v1[i],i)!==side(v2[i],i))sh.push('"'+AX[i][0]+' ↔ '+AX[i][1]+'" จาก "'+side(v1[i],i)+'" เป็น "'+side(v2[i],i)+'"');
+  if(sh.length)ins.push('ครึ่งหลังต่างจากครึ่งแรก: '+sh.slice(0,2).join(' และ '));
+  const dish=['lied_mom','soothed_mom','deleted_msg','lied_msg','kept_lying','hid_leak','blamed_other','obeyed_boss'].filter(f=>F[f]);
+  if(F.claimed_clean&&dish.length)ins.push('คุณตอบว่าไม่มีเรื่องที่ปิดบัง แต่บันทึกของเกมมี '+dish.length+' ครั้งที่คุณเลือกทางที่ไม่ตรงความจริงหรือปิดบังไว้');
+  else if(F.honest_all&&dish.length)ins.push('คุณยอมรับทุกเรื่องที่ปิดบัง ซึ่งตรงกับบันทึก '+dish.length+' รายการ');
+  else if(!dish.length&&(F.honest_all||F.honest_some||F.claimed_clean))ins.push('ทั้งคืนคุณไม่เลือกทางที่ไม่ตรงความจริงหรือปิดบังคนอื่นเลย');
+  if(F.B_promised&&(F.exposed_B||F.countered_B))ins.push('คุณสัญญาว่าจะเก็บความลับของ '+nm('{B}')+' แต่เมื่อเรื่องมาถึงตัวคุณ คุณพูดถึงเขาออกมา');
+  else if(F.B_promised&&(F.let_in||F.warned_B))ins.push('คุณเก็บความลับของ '+nm('{B}')+' ไว้ได้ และเปิดประตูให้เขาเมื่อเขามาหา');
+  if(F.conformed)ins.push('ข้อที่ทุกคนยกมือ คุณยกตามคนส่วนใหญ่');else if(F.dissented)ins.push('ข้อที่ทุกคนยกมือ คุณเป็นคนเดียวที่ไม่ยก');else if(F.secret_ballot)ins.push('ข้อที่ทุกคนยกมือ คุณเสนอให้เปลี่ยนวิธีโหวต');
+  const call=F.call_mom?'แม่':F.call_A?nm('{A}'):F.call_B?nm('{B}'):null;
+  if(call)ins.push('สายสุดท้ายของคืนนี้ คุณเลือกโทรหา'+call);
+  if(F.blame_self)ins.push('ตอนท้าย คุณเลือกรับความผิดไว้ที่ตัวเองทั้งหมด');else if(F.blame_system)ins.push('ตอนท้าย คุณมองว่าสถานการณ์และระบบเป็นต้นเหตุ');else if(F.blame_others)ins.push('ตอนท้าย คุณมองว่าความรับผิดชอบเป็นของคนที่ทำให้คุณต้องเลือก');
+  try{
+    const l=JSON.parse(localStorage.getItem('nr_local')||'[]'),last=l[l.length-1],vp=vecOf(pa),d=[];
+    if(last&&Array.isArray(last.v)){for(let i=0;i<5;i++)if(vp[i]!==null&&Math.abs(vp[i]-last.v[i])>=.4&&side(vp[i],i)!==side(last.v[i],i))d.push('"'+AX[i][0]+' ↔ '+AX[i][1]+'" โหมดปกติ "'+side(last.v[i],i)+'" โหมดนี้ "'+side(vp[i],i)+'"');
+      if(d.length)ins.push('เทียบกับโหมดปกติรอบล่าสุดของคุณ แกนที่ต่างกัน: '+d.join(', ')+' (ชุดคำถามต่างกัน ความต่างอาจมาจากเนื้อหามากกว่าแรงกดดัน)')}
+  }catch(e){}
+  if(!ins.length)ins.push('คุณเลือกอย่างสม่ำเสมอตลอดคืน ไม่มีรูปแบบที่เปลี่ยนชัดเจน');
+  $('pIns').innerHTML=ins.slice(0,7).map(t=>'<div class="ins">'+t+'</div>').join('');
+  $('pDeb').innerHTML=['<b>เวลาจำกัด:</b> 50 → 42 → 36 → 30 วินาทีต่อข้อ หดเพิ่มอีกเล็กน้อยตามระดับความตึงเครียดที่เกมสะสม ถ้าหมดเวลา เกมเลือกผลเริ่มต้นแทนคุณ ซึ่งมักเป็นผลที่แย่ที่สุด',
+   '<b>ตัวเลือกที่หายไป:</b> ตั้งแต่รอบที่ 3 ตัวเลือกหนึ่งข้อหายไปเมื่อเวลาผ่านครึ่ง เพื่อให้รู้สึกว่าการลังเลมีราคา',
+   '<b>ชื่อที่คุณใส่:</b> ใช้เพื่อให้ผลของการเลือกตกกับคนที่มีตัวตนสำหรับคุณ ชื่อไม่ถูกส่งไปไหน',
+   '<b>ผลย้อนกลับมา:</b> ข้อความในข้อหลังๆ เปลี่ยนไปตามสิ่งที่คุณเลือกก่อนหน้า',
+   '<b>ระดับความตึงเครียดของเกม:</b> เพิ่มตามจำนวนข้อ ข้อที่หนัก และข้อที่หมดเวลา ทำให้ภาพมืดลง ดวงตาด้านบนเบิกกว้างขึ้น และเสียงหัวใจเร็วขึ้น เป็นค่าที่เกมตั้งไว้ ไม่ใช่การวัดความเครียดจริงของคุณ',
+   '<b>ผู้สังเกตการณ์:</b> ประโยคที่เขาพูดสร้างจากข้อมูลจริงของคุณในรอบนี้ ไม่มีตัวเลขหรือคำพูดที่แต่งขึ้น',
+   '<b>ไม่มีคำตอบที่ถูก:</b> ทุกตัวเลือกถูกออกแบบให้มีราคาที่ต้องจ่าย'].map(t=>'<div class="ins">'+t+'</div>').join('');
+  showScreen('sPress');
+  const a={};pa.forEach((x,i)=>a[i]=x.o);
+  const vv=vecOf(pa).map(x=>x===null?0:Math.round(x*100)/100);
+  const rec={t:Date.now(),a,v:vv,to:toN,st:S.sl[S.sl.length-1]||0,n:pa.length};
+  try{const l=JSON.parse(localStorage.getItem('nr_press')||'[]');l.push(rec);localStorage.setItem('nr_press',JSON.stringify(l.slice(-50)))}catch(e){}
+  const plausible=pa.length===PN&&pa.filter(x=>!x.to).every(x=>x.rt>=300);
+  if(DB_URL&&plausible)fetch(DB_URL.replace(/\/$/,'')+'/pressure.json',{method:'POST',body:JSON.stringify(rec)}).catch(()=>{});
+}
+
 /* ---------- วิเคราะห์ว่าคนเลิกเล่นตรงไหน ---------- */
 function beaconQuit(){
-  if(!DB_URL||!S||S.done||S.qsent||!S.ans.length||(screen!=='game'&&screen!=='regret'))return;
+  if(!DB_URL||!S||S.mode==='P'||S.done||S.qsent||!S.ans||!S.ans.length||(screen!=='game'&&screen!=='regret'))return;
   S.qsent=true;
   const body=JSON.stringify({t:Date.now(),q:S.order[Math.min(S.i,S.order.length-1)],i:S.i,n:S.order.length,k:S.ans.length});
   try{navigator.sendBeacon(DB_URL.replace(/\/$/,'')+'/quits.json',body)}catch(e){}
@@ -1100,6 +1390,22 @@ function beaconQuit(){
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')beaconQuit()});
 addEventListener('pagehide',beaconQuit);
 document.addEventListener('keydown',e=>{if(screen!=='game'||!S||!S.ready)return;const k={'1':0,'2':1,'3':2}[e.key];if(k===undefined)return;const bs=document.querySelectorAll('#opts .opt');if(bs[k])bs[k].click()});
+/* ---------- แจ้งเตือนเวอร์ชันใหม่ ---------- */
+const BUILD='2026-10-16-b';
+let NEWV=null,updHide=false;
+function renderUpd(){const el=$('updBar');if(el)el.style.display=(NEWV&&!updHide&&['start','result','gate','press'].indexOf(screen)>=0)?'flex':'none'}
+async function checkUpd(){
+  if(!/^https?:/.test(location.protocol))return;
+  try{
+    const r=await fetch(location.pathname+'?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+    const m=(await r.text()).match(/const BUILD='([^']+)'/);
+    if(m&&m[1]!==BUILD){NEWV=m[1];renderUpd()}
+  }catch(e){}
+}
+$('updGo').onclick=()=>{location.replace(location.pathname+'?v='+encodeURIComponent(NEWV||Date.now())+location.hash)};
+$('updNo').onclick=()=>{updHide=true;renderUpd()};
+setTimeout(checkUpd,2500);setInterval(checkUpd,300000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpd()});
 </script>
 </body>
 </html>
