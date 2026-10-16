@@ -64,6 +64,13 @@ body.dk canvas.cv{filter:brightness(.72) saturate(.85)}
 .arow{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
 .arow span{width:150px;flex:none}.arow .bar{flex:1;height:14px;border:3px solid var(--line);background:var(--soft)}
 .arow .bar i{display:block;height:100%;background:var(--mut)}.arow.me .bar i{background:var(--acc)}.arow em{width:42px;font-style:normal;text-align:right;font-size:13px}
+.mf{position:absolute;top:-6px;width:0;height:0;margin-left:-8px;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:16px solid var(--acc2);z-index:1;filter:drop-shadow(0 0 0 var(--line))}
+.fr{background:var(--soft);border:3px dashed var(--line);padding:8px 10px;margin:10px 0;font-size:14px;text-align:left}
+.fr input{font:inherit;font-size:14px;padding:4px 8px;border:3px solid var(--line);background:var(--panel);color:var(--ink);width:150px}
+.tb{flex-wrap:wrap;justify-content:flex-end}
+body.rm *{animation:none!important;transition:none!important}
+body.fs1{font-size:18px}body.fs1 .box{font-size:20px}body.fs1 .opt{font-size:19px}body.fs1 .mut,body.fs1 .dr,body.fs1 .arow,body.fs1 .fr{font-size:16px}body.fs1 .axl{font-size:15px}body.fs1 .sm{font-size:14px}
+body.fs2{font-size:20px}body.fs2 .box{font-size:23px}body.fs2 .opt{font-size:22px}body.fs2 .mut,body.fs2 .dr,body.fs2 .arow,body.fs2 .fr{font-size:18px}body.fs2 .axl{font-size:17px}body.fs2 .sm{font-size:15px}
 .note{font-size:12px;color:var(--mut);text-align:center;margin:6px 0 24px}
 @media(max-width:520px){.arow span{width:104px}.card h2{font-size:19px}}
 </style>
@@ -72,20 +79,23 @@ body.dk canvas.cv{filter:brightness(.72) saturate(.85)}
 <div id="app">
   <div class="top">
     <div class="logo">NO REGRETS?</div>
-    <div class="tb"><button class="sm" id="bSnd">เสียง: เปิด</button><button class="sm" id="bTheme">ธีม: สดใส</button></div>
+    <div class="tb"><button class="sm" id="bSnd">เสียง: เปิด</button><button class="sm" id="bTheme">ธีม: สดใส</button><button class="sm" id="bFs">ตัวอักษร: ปกติ</button><button class="sm" id="bRm">ลดเคลื่อนไหว: ปิด</button></div>
   </div>
 
   <section id="sStart" class="screen on">
     <div class="card center">
       <div class="kick">GAME START</div>
       <h2>เลือกแล้วไม่เสียใจ?</h2>
-      <p class="mut" style="margin:6px 0 12px">60 สถานการณ์เล็กๆ ในชีวิตจริง ไม่มีคำตอบที่ถูก<br>เลือกตามที่ใจคุณจะทำจริง แล้วดูว่านิสัยของคุณเป็นแบบไหน<br>และเหมือนหรือต่างจากคนอื่นแค่ไหน</p>
+      <p class="mut" style="margin:6px 0 12px">100 สถานการณ์เล็กๆ ในชีวิตจริง ไม่มีคำตอบที่ถูก<br>เลือกตามที่ใจคุณจะทำจริง แล้วดูว่านิสัยของคุณเป็นแบบไหน<br>และเหมือนหรือต่างจากคนอื่นแค่ไหน</p>
       <div class="modes">
         <button class="btn" data-n="20">เล่นสั้น 20 ข้อ</button>
         <button class="btn" data-n="40">กลาง 40 ข้อ</button>
-        <button class="btn alt" data-n="60">เต็ม 60 ข้อ</button>
+        <button class="btn" data-n="60">ยาว 60 ข้อ</button>
+        <button class="btn alt" data-n="100">เต็ม 100 ข้อ</button>
       </div>
-      <p class="mut">ข้อที่ได้จะสุ่มทุกรอบ และมีการจับเวลาตอบเงียบๆ ด้วย</p>
+      <p class="mut">ข้อที่ได้จะสุ่มทุกรอบ มีการจับเวลาตอบเงียบๆ และบางข้อจะมี "ตอนต่อ" ตามผลที่คุณเลือกไว้</p>
+      <div class="fr" id="frBox" style="display:none"></div>
+      <div class="fr">มีรหัสหรือลิงก์จากเพื่อน? <input id="frIn" placeholder="วางรหัส/ลิงก์"> <button class="sm" id="frGo">ใช้</button><div id="frMsg" class="mut" style="margin-top:4px"></div></div>
     </div>
   </section>
 
@@ -117,8 +127,14 @@ body.dk canvas.cv{filter:brightness(.72) saturate(.85)}
       <p style="text-align:left;margin-top:6px"><b>จุดบอด:</b> <span id="rB"></span></p>
       <div id="rBadges" style="margin-top:10px"></div>
     </div>
+    <div class="card center" id="shareBox"><h3>การ์ดผลของคุณ</h3>
+      <img id="cardImg" alt="การ์ดผลของคุณ" style="max-width:100%;border:4px solid var(--line);display:none">
+      <p class="mut" id="cardWait">กำลังสร้างการ์ด...</p>
+      <div style="margin-top:10px"><button class="btn" id="bShare">บันทึก/แชร์เป็นรูป</button><button class="btn alt" id="bChallenge">คัดลอกลิงก์ท้าเพื่อน</button></div>
+      <p class="mut" id="chNote">ส่งลิงก์ให้เพื่อนเล่น แล้วเพื่อนจะเห็นว่าตัวเองเหมือน/ต่างจากคุณตรงไหน</p></div>
     <div class="card"><h3>แผนที่นิสัย 5 แกน</h3><div id="axes"></div>
-      <div class="legend"><span>■ คุณ</span><span>◆ ค่าเฉลี่ยผู้เล่นอื่น</span></div></div>
+      <div class="legend"><span>■ คุณ</span><span>◆ ค่าเฉลี่ยผู้เล่นอื่น</span><span id="lgF" style="display:none">▲ เพื่อน</span></div></div>
+    <div class="card" id="cmp" style="display:none"></div>
     <div class="card"><h3>สิ่งที่เกมสังเกตเห็น</h3><div id="ins"></div></div>
     <div class="card" id="agg"><h3>เทียบกับผู้เล่นคนอื่น</h3><p class="mut">กำลังโหลดสถิติ...</p></div>
     <div class="card center">
@@ -194,7 +210,56 @@ const QS=[
 ["ความพลาดที่ไม่มีใครรู้","home",["me"],"neutral","x","คุณเคยพลาดเรื่องใหญ่ที่มีแค่คุณคนเดียวที่รู้ และตอนนี้ไม่มีใครเสียหายแล้ว",[["สารภาพ","หลัก,ทำ"],["เก็บไว้เป็นบทเรียนเงียบๆ","เหตุ"],["ลืมมัน","ปล่อย"]]],
 ["รางวัลที่มีเพื่อนช่วย","office",["me","friend"],"happy","w","คุณได้รับรางวัลจากงานที่เพื่อนมีส่วนช่วยมาก แต่ชื่อบนรางวัลเป็นชื่อคุณคนเดียว",[["ประกาศเครดิตให้เพื่อน","เท่า,ทำ"],["รับไปเงียบๆ","ผล"],["แบ่งรางวัลให้เป็นการส่วนตัว","ใจ"]]],
 ["อดีตคนรังแก","street",["me","stranger"],"sad","s","คุณเจอคนที่เคยรังแกคุณสมัยเรียน ตอนนี้เขาตกต่ำและมาขอความช่วยเหลือ",[["ช่วย","ใจ"],["ปฏิเสธ","หลัก"],["ช่วยเท่าที่ไม่กระทบตัวเอง","เหตุ"]]],
-["งานในฝัน","home",["me","parent"],"sad","f","คุณได้งานในฝัน แต่ต้องย้ายไปไกลและทิ้งพ่อแม่ที่ป่วยไว้",[["ไปทำงาน","ผล,เอง"],["อยู่ดูแลพ่อแม่","พวก,ใจ"],["ไป แล้วหาคนมาดูแลแทน","เหตุ"]]]
+["งานในฝัน","home",["me","parent"],"sad","f","คุณได้งานในฝัน แต่ต้องย้ายไปไกลและทิ้งพ่อแม่ที่ป่วยไว้",[["ไปทำงาน","ผล,เอง"],["อยู่ดูแลพ่อแม่","พวก,ใจ"],["ไป แล้วหาคนมาดูแลแทน","เหตุ"]]],
+// ---- ข้อใหม่ 61-100 + ตอนต่อ 101-108 ----
+["ไอเดียที่น่าจะพลาด","office",["me","boss","coworker"],"worried","w","หัวหน้าเสนอไอเดียที่คุณเห็นว่าน่าจะพลาดแน่ ทุกคนในห้องประชุมพยักหน้าเห็นด้วย",[["ค้านกลางที่ประชุม","หลัก,เอง"],["พยักหน้าตามทุกคน แล้วดูสถานการณ์","พวก,ปล่อย"],["ส่งอีเมลสรุปความเสี่ยงหลังประชุม","เหตุ,ทำ"]]],
+["ขั้นตอนที่ช้าเกินไป","office",["me","coworker"],"worried","w","ระบบอนุมัติของบริษัทต้องรอ 3 วัน แต่ลูกค้ารอไม่ได้ คุณรู้ทางลัดที่ไม่ได้ผิดชัดเจน แต่ข้ามขั้นตอนไป",[["ทำตามขั้นตอน ยอมช้า","กฎ"],["ใช้ทางลัดและรับผิดชอบเอง","เอง,ผล"],["ขอข้อยกเว้นเป็นทางการ","กฎ,ทำ"]]],
+["ลูกค้าโวยเพราะความพลาด","office",["me","coworker","boss"],"angry","w","งานของทีมพลาดจนลูกค้าโวย หัวหน้าถามว่าใครรับผิดชอบ ซึ่งความจริงคือเพื่อนร่วมทีมที่พลาด",[["รับผิดเอง ปกป้องเพื่อน","พวก,เอง"],["บอกตามจริงว่าใครทำ","หลัก,เท่า"],["บอกว่าเป็นความผิดของระบบทีมทั้งหมด","เหตุ"]]],
+["เลื่อนตำแหน่งไม่ยุติธรรม","office",["me","coworker","boss"],"sad","w","เพื่อนร่วมงานที่ทำงานน้อยกว่าคุณได้เลื่อนตำแหน่ง เพราะสนิทกับหัวหน้า",[["คุยกับหัวหน้าตรงๆ","หลัก,ทำ"],["ทำงานเท่าเดิม ไม่คิดมาก","ปล่อย"],["เริ่มมองหางานใหม่","ผล,เอง"]]],
+["ช่วยบอกว่าป่วย","office",["me","coworker","boss"],"neutral","w","เพื่อนร่วมงานขอให้คุณบอกหัวหน้าว่าเขาป่วย ทั้งที่รู้กันว่าเขาไปเที่ยว",[["ช่วยบอก","พวก"],["ปฏิเสธตรงๆ","หลัก"],["บอกว่าไม่รู้เรื่อง ให้เขาแจ้งเอง","เอง,ปล่อย"]]],
+["กฎใหม่ที่ไม่เวิร์ก","office",["me","boss","coworker"],"neutral","w","บริษัทออกกฎใหม่ที่ทำให้งานช้าลงมาก ทุกคนบ่นลับหลังแต่ไม่มีใครพูดออกมา",[["เขียนข้อเสนอแก้ไขส่งขึ้นไป","ทำ,เหตุ"],["ทำตามกฎไปก่อน","กฎ"],["แอบทำแบบเดิมที่ได้ผลกว่า","เอง,ผล"]]],
+["ชื่อในรายงาน","office",["me","coworker","boss"],"happy","w","ทีมส่งรายงานร่วมกันและจะใส่ชื่อทุกคนเท่ากัน แต่คุณเป็นคนทำไปเกือบทั้งหมด",[["ปล่อยให้ใส่เท่ากัน เพราะเป็นงานทีม","เท่า,ปล่อย"],["ขอให้แก้ตามสัดส่วนงานจริง","หลัก,ทำ"],["ใส่ชื่อเท่ากัน แต่บอกหัวหน้าเงียบๆ","เอง"]]],
+["ชวนลาออกพร้อมกัน","office",["me","coworker","coworker2"],"angry","w","เพื่อนร่วมงานชวนทุกคนลาออกพร้อมกันเพื่อประท้วงบริษัท แต่คุณยังไม่พร้อมเรื่องเงิน",[["ลาออกด้วย ไม่ทิ้งเพื่อน","พวก,ทำ"],["ไม่ไป และอธิบายเหตุผลของตัวเอง","เหตุ,เอง"],["เสนอให้ลองเจรจากับบริษัทก่อน","ทำ,กฎ"]]],
+["ข้ามขั้นตอนความปลอดภัย","office",["me","boss"],"angry","w","หัวหน้าสั่งให้ข้ามขั้นตอนความปลอดภัยของงานเพราะลูกค้าเร่ง ไม่น่าเกิดอันตรายแน่แต่ผิดระเบียบ",[["ปฏิเสธที่จะทำ","หลัก,เอง"],["ทำตามที่หัวหน้าสั่ง","ผล"],["ขอให้หัวหน้าสั่งเป็นลายลักษณ์อักษร","กฎ,เหตุ"]]],
+["พนักงานใหม่พลาดซ้ำ","office",["me","coworker"],"worried","w","พนักงานใหม่ทำงานพลาดซ้ำๆ แต่ขยันและตั้งใจมาก",[["สอนละเอียดแม้เสียเวลาตัวเอง","ใจ,ทำ"],["ปล่อยให้เรียนรู้จากความพลาด","ปล่อย"],["แจ้งหัวหน้าให้ย้ายไปงานที่เหมาะกว่า","เหตุ,กฎ"]]],
+["กองกลางค่ากาแฟ","office",["me","coworker","coworker2"],"neutral","w","ออฟฟิศมีกองกลางค่ากาแฟ แต่บางคนดื่มบ่อยโดยไม่เคยจ่าย",[["ทักตรงๆ","เท่า,ทำ"],["ปล่อย ไม่ได้เสียหายมาก","ปล่อย"],["เสนอกติกาใหม่ให้จ่ายตามที่ใช้","กฎ,เท่า"]]],
+["แผนลับของคู่แข่ง","office",["me","friend"],"worried","w","เพื่อนที่ทำบริษัทคู่แข่งเผลอเล่าแผนสำคัญให้คุณฟัง ข้อมูลนี้ช่วยงานคุณได้มาก",[["ใช้ข้อมูลนั้นในงานตัวเอง","ผล"],["เก็บเป็นความลับ ไม่ใช้","หลัก"],["เตือนเพื่อนว่าอย่าเล่าแบบนี้อีก","พวก,ใจ"]]],
+["เงินเดือนที่เพิ่งรู้","office",["me","coworker","coworker2"],"sad","w","เพื่อนร่วมงานบังเอิญเปิดเผยเงินเดือน คุณพบว่าได้น้อยกว่าคนที่ทำงานเท่ากัน",[["ขอปรับเงินเดือนของตัวเอง","เอง,ทำ"],["ชวนทั้งทีมเรียกร้องความเท่าเทียม","เท่า,ทำ"],["เงียบไว้ แต่ทำงานเท่าที่ได้รับ","ปล่อย"]]],
+["บุญคุณของหัวหน้า","office",["me","boss"],"worried","w","หัวหน้าเคยช่วยคุณตอนลำบาก ตอนนี้เขาขอให้คุณช่วยปิดความผิดเล็กๆ ในงาน",[["ช่วยปิด ตอบแทนบุญคุณ","พวก"],["ปฏิเสธอย่างสุภาพ","หลัก"],["แก้งานให้ถูกต้องแทนโดยไม่บอกใคร","เอง,ผล"]]],
+["เช้าวันฝนตก","home",["me"],"neutral","x","คุณตั้งใจจะตื่นไปวิ่งตอนเช้า แต่ฝนตกและเตียงอุ่นมาก",[["ไปวิ่งอยู่ดี ตามที่สัญญากับตัวเอง","กฎ,ทำ"],["ล้มแผนวันนี้ ไม่คิดมาก","ปล่อย"],["เปลี่ยนเป็นออกกำลังกายในห้อง","เอง,ผล"]]],
+["ของลด 70%","shop",["me"],"happy","x","คุณเจอของที่อยากได้มานานลดราคา 70% แต่ไม่ได้อยู่ในงบเดือนนี้",[["ซื้อเลย โอกาสแบบนี้ไม่มีบ่อย","ผล,เอง"],["ไม่ซื้อ ตามงบที่ตั้งไว้","กฎ"],["กลับไปคิดก่อน ถ้ายังอยากค่อยกลับมา","เหตุ"]]],
+["ข้อความจากแฟนเก่า","online",["me"],"neutral","x","แฟนเก่าที่เลิกกันนานแล้วทักมาถามสารทุกข์สุกดิบ",[["ตอบอย่างสุภาพ","ใจ"],["ไม่ตอบ","เหตุ,เอง"],["ตอบ แล้วเล่าให้คนใกล้ตัวฟัง","หลัก,ทำ"]]],
+["ข้อความที่ค้างไว้","online",["me"],"worried","x","ข้อความที่ควรตอบค้างมาหลายวันแล้ว ยิ่งช้ายิ่งตอบยาก",[["ตอบตอนนี้ พร้อมขอโทษที่ช้า","ทำ"],["ปล่อยให้เงียบไปเลย","ปล่อย"],["ตั้งเวลาเตือนให้ตอบพรุ่งนี้","กฎ,เหตุ"]]],
+["คำสัญญาปีใหม่","home",["me"],"sad","x","คุณตั้งเป้าหมายไว้ตั้งแต่ต้นปี แต่ผ่านไปสามเดือนแทบไม่ได้ทำเลย",[["เริ่มใหม่ทันที ไม่โทษตัวเอง","ทำ"],["ลดเป้าให้เล็กลงให้เหมาะกับชีวิตจริง","เหตุ,เอง"],["ช่างมัน รอปีหน้า","ปล่อย"]]],
+["คำชมที่ไม่ควรได้","office",["me","boss"],"happy","x","คุณได้รับคำชมในงานที่จริงๆ ไม่ได้ตั้งใจทำดีขนาดนั้น มันแค่บังเอิญออกมาดี",[["รับคำชมไว้","ผล"],["บอกตามจริงว่าเป็นเรื่องบังเอิญ","หลัก"],["ขอบคุณ แล้วตั้งใจทำให้ได้แบบนี้จริงๆ","ทำ,เอง"]]],
+["เงินสำรองกับความฝัน","home",["me"],"neutral","x","คุณมีเงินเก็บก้อนหนึ่งที่ไว้ใช้ยามฉุกเฉิน แต่ทริปในฝันกำลังลดราคาครั้งเดียว",[["ไปเที่ยว ชีวิตมีครั้งเดียว","ผล,เอง"],["เก็บเงินไว้ตามแผน","กฎ"],["ไปทริปเล็กลงด้วยเงินครึ่งเดียว","เหตุ"]]],
+["เรื่องที่ยังไม่กล้าบอก","home",["me","parent"],"sad","x","มีเรื่องหนึ่งที่คุณยังไม่กล้าบอกพ่อแม่ ถ้าบอกท่านอาจเสียใจ แต่ถ้าไม่บอกคุณอึดอัด",[["บอกตอนนี้เลย","หลัก,ทำ"],["รอให้พร้อมกว่านี้","ปล่อย"],["เขียนจดหมายอธิบายให้ท่านอ่าน","เหตุ,เอง"]]],
+["คำวิจารณ์ที่เจ็บ","office",["me","coworker"],"neutral","x","เพื่อนร่วมงานวิจารณ์งานของคุณตรงๆ เจ็บแต่น่าจะจริง",[["ขอบคุณ แล้วนำไปปรับ","เหตุ,ทำ"],["ปล่อยให้ใจเย็นลงก่อนค่อยคิด","ใจ,ปล่อย"],["โต้แย้งกลับ","เอง,ทำ"]]],
+["ตื่นสาย","home",["me"],"worried","x","คุณตื่นสาย นัดสำคัญเหลือเวลาสามสิบนาที ถ้าไม่อาบน้ำจะไปทัน",[["ไปทันทีสภาพนั้น","ผล"],["อาบน้ำ ไปสายนิดหน่อย พร้อมแจ้งก่อน","กฎ,ทำ"],["โทรขอเลื่อนนัด","เอง"]]],
+["นัดซ้อนกัน","street",["me","friend","friend2"],"neutral","f","เพื่อนสองกลุ่มนัดวันเดียวกัน กลุ่มแรกสนิทกว่า ส่วนกลุ่มสองนัดคุณก่อนและตั้งใจมาก",[["ไปกลุ่มที่สนิทกว่า","พวก"],["ไปกลุ่มที่นัดก่อน","กฎ,เท่า"],["แบ่งเวลาไปทั้งสองที่ครึ่งๆ","เอง,ผล"]]],
+["ของฝากไม่พอ","office",["me","friend","coworker"],"happy","f","คุณซื้อของฝากมาจำนวนจำกัด ไม่พอให้ทุกคนในทีม",[["ให้คนสนิทก่อน","พวก"],["แบ่งทุกคนเท่ากัน แม้ชิ้นเล็กลง","เท่า"],["จับฉลากให้ยุติธรรม","กฎ,เท่า"]]],
+["ห้องเช่าร่วมกัน","home",["me","friend","friend2"],"angry","f","เพื่อนสนิทไม่ช่วยค่าแก๊สและไม่เก็บของ เพื่อนร่วมห้องอีกคนเริ่มหงุดหงิด",[["คุยตรงกับเพื่อนสนิท","หลัก,ทำ"],["ตั้งตารางหน้าที่ให้ทุกคนเท่ากัน","กฎ,เท่า"],["ช่วยทำเอง ไม่อยากมีเรื่อง","พวก,ปล่อย"]]],
+["งานแต่งเพื่อน","restaurant",["me","friend","friend2"],"neutral","f","เพื่อนสนิทแต่งงาน และเชิญคนที่คุณมีเรื่องไม่ลงรอยด้วยมาในงานเดียวกัน",[["ไปและวางตัวเป็นปกติ","เหตุ"],["ไป แต่ไม่คุยกับคนนั้น","เอง"],["ไม่ไป","ใจ,ปล่อย"]]],
+["เด็กอาละวาดในร้าน","restaurant",["me","kid","parent"],"angry","f","หลานตัวเล็กอาละวาดในร้านอาหาร พ่อแม่เด็กไม่ห้าม คนอื่นเริ่มมอง",[["เข้าไปปลอบเด็กเอง","ใจ,ทำ"],["บอกพ่อแม่เด็กตรงๆ","หลัก,ทำ"],["ปล่อย เป็นหน้าที่พ่อแม่","ปล่อย"]]],
+["สุนัขของเพื่อน","park",["me","friend","dog"],"worried","f","เพื่อนฝากสุนัขไว้กับคุณ แต่มันกัดรองเท้าราคาแพงของคุณจนเสีย",[["ไม่บอก ซื้อรองเท้าใหม่เอง","พวก,ใจ"],["บอกตามตรง และขอค่าเสียหาย","หลัก,เท่า"],["บอกเพื่อนว่าไม่เป็นไร ไม่ต้องรับผิดชอบ","ใจ,ปล่อย"]]],
+["เห็นคนลอกข้อสอบ","school",["me","stranger"],"worried","s","ระหว่างสอบ คุณเห็นนักเรียนที่ไม่รู้จักคนหนึ่งแอบลอกข้อสอบอย่างชัดเจน",[["แจ้งกรรมการคุมสอบ","หลัก,กฎ"],["เตือนเบาๆ ให้เขาหยุดเอง","ผล,ใจ"],["ปล่อย ไม่ใช่เรื่องของเรา","ปล่อย"]]],
+["เพื่อนลอกข้อสอบ","school",["me","friend"],"worried","f","ระหว่างสอบ คุณเห็นเพื่อนสนิทแอบลอกข้อสอบอย่างชัดเจน",[["แจ้งกรรมการคุมสอบ","หลัก,กฎ"],["เตือนเบาๆ ให้เขาหยุดเอง","ผล,ใจ"],["ปล่อย ไม่ใช่เรื่องของเรา","ปล่อย"]]],
+["พนักงานแจกส่วนลดเกินสิทธิ์","shop",["me","vendor"],"happy","s","คุณเห็นพนักงานร้านที่ไม่รู้จักให้ส่วนลดเกินสิทธิ์กับคนรู้จักของเขา ทั้งที่ร้านห้ามไว้",[["แจ้งผู้จัดการร้าน","หลัก,กฎ"],["ทักพนักงานเบาๆ ว่าอาจมีปัญหาได้","ผล,ใจ"],["ปล่อย ไม่ใช่เรื่องของเรา","ปล่อย"]]],
+["เพื่อนแจกส่วนลดเกินสิทธิ์","shop",["me","friend"],"happy","f","คุณเห็นเพื่อนสนิทที่เป็นพนักงานร้านให้ส่วนลดเกินสิทธิ์กับคนรู้จักของเขา ทั้งที่ร้านห้ามไว้",[["แจ้งผู้จัดการร้าน","หลัก,กฎ"],["ทักพนักงานเบาๆ ว่าอาจมีปัญหาได้","ผล,ใจ"],["ปล่อย ไม่ใช่เรื่องของเรา","ปล่อย"]]],
+["เพื่อนบ้านเคลมประกัน","home",["me","stranger"],"neutral","s","เพื่อนบ้านที่ไม่สนิทเล่าให้ฟังว่าแต่งเรื่องเพิ่มรอยชนตอนเคลมประกันรถ ให้ได้เงินมากกว่าความเสียหายจริง",[["แจ้งบริษัทประกัน","หลัก,กฎ"],["บอกเขาว่าไม่ควรทำแบบนั้น","ผล,ใจ"],["ฟังแล้วปล่อยผ่าน","ปล่อย"]]],
+["เพื่อนสนิทเคลมประกัน","home",["me","friend"],"neutral","f","เพื่อนสนิทเล่าให้ฟังว่าแต่งเรื่องเพิ่มรอยชนตอนเคลมประกันรถ ให้ได้เงินมากกว่าความเสียหายจริง",[["แจ้งบริษัทประกัน","หลัก,กฎ"],["บอกเขาว่าไม่ควรทำแบบนั้น","ผล,ใจ"],["ฟังแล้วปล่อยผ่าน","ปล่อย"]]],
+["ร้านขายกระเป๋าเลียนแบบ","online",["me","stranger"],"neutral","s","คุณรู้ว่าร้านค้าออนไลน์ร้านหนึ่งที่ไม่รู้จัก ขายกระเป๋าเลียนแบบโดยหลอกว่าเป็นของแท้ มีคนซื้อไปแล้วหลายคน",[["รายงานแพลตฟอร์ม","หลัก,กฎ"],["เตือนผู้ซื้อในคอมเมนต์","ผล,ใจ"],["ปล่อย ไม่ใช่เรื่องของเรา","ปล่อย"]]],
+["เพื่อนขายกระเป๋าเลียนแบบ","online",["me","friend"],"neutral","f","คุณรู้ว่าเพื่อนสนิทเปิดร้านออนไลน์ขายกระเป๋าเลียนแบบโดยหลอกว่าเป็นของแท้ มีคนซื้อไปแล้วหลายคน",[["รายงานแพลตฟอร์ม","หลัก,กฎ"],["เตือนผู้ซื้อในคอมเมนต์","ผล,ใจ"],["ปล่อย ไม่ใช่เรื่องของเรา","ปล่อย"]]],
+["รถแปลกหน้าจอดช่องคนพิการ","street",["me","stranger"],"angry","s","คุณเห็นรถของคนแปลกหน้าจอดในช่องจอดสำหรับคนพิการ โดยไม่มีสัญลักษณ์อนุญาต",[["ถ่ายรูปแจ้งเจ้าหน้าที่","หลัก,กฎ"],["พูดขอให้เขาย้ายรถ","ผล,ใจ"],["ปล่อย ไม่ใช่เรื่องของเรา","ปล่อย"]]],
+["รถเพื่อนจอดช่องคนพิการ","street",["me","friend"],"angry","f","เพื่อนสนิทที่ขับรถไปด้วยกันจอดในช่องจอดสำหรับคนพิการ โดยไม่มีสัญลักษณ์อนุญาต",[["ถ่ายรูปแจ้งเจ้าหน้าที่","หลัก,กฎ"],["พูดขอให้เขาย้ายรถ","ผล,ใจ"],["ปล่อย ไม่ใช่เรื่องของเรา","ปล่อย"]]],
+["แม่ค้าที่ต้องชดเชย","shop",["me","vendor"],"sad","x","วันรุ่งขึ้นคุณแวะไปคืนเงินทอนเกิน แม่ค้าบอกว่าเมื่อวานเธอต้องควักเงินส่วนตัวชดเชยลิ้นชักที่ขาด",[["ขอโทษ และให้เงินเพิ่มเป็นค่าเสียเวลา","ใจ,ทำ"],["คืนเงินตามจำนวนเดิม และขอโทษ","หลัก"],["คืนเงิน แล้วบอกว่าเธอควรนับเงินให้ละเอียดกว่านี้","เหตุ"]],[0,[1]]],
+["เพื่อนได้งานแล้ว","office",["me","friend","boss"],"worried","x","เพื่อนที่ใส่ประสบการณ์ปลอมได้งานนั้นไปแล้ว ตอนนี้บริษัทโทรมาขอให้คุณยืนยันประวัติการทำงานของเขา",[["ยืนยันตามที่เพื่อนบอก","พวก"],["บอกตามจริง","หลัก,เท่า"],["บอกว่าไม่สะดวกให้ข้อมูล","ปล่อย,เอง"]],[1,[0]]],
+["หัวหน้าไม่พอใจ","office",["me","boss"],"angry","x","หลังจากที่คุณชี้แจงกลางที่ประชุม หัวหน้าเริ่มมอบงานยากและเวลาน้อยให้คุณ",[["ยอมรับงานและพิสูจน์ตัวเอง","ทำ,เอง"],["ร้องเรียนฝ่ายบุคคล","กฎ,ทำ"],["ลดแรงลงและรอให้เรื่องเงียบ","ปล่อย"]],[15,[0]]],
+["ฝ่ายบัญชีกำลังตรวจ","office",["me","boss"],"worried","x","ฝ่ายบัญชีค้นพบว่าบริษัทโอนเงินเกิน และกำลังไล่ตรวจว่าเงินไปอยู่ที่ใคร",[["สารภาพและคืนเงินทันที","หลัก,ทำ"],["แกล้งทำเป็นไม่รู้ ไม่พูดอะไร","ผล,ปล่อย"],["คืนเงินพร้อมบอกว่าเพิ่งสังเกตเหมือนกัน","ผล"]],[17,[1,2]]],
+["ป้ายตามหาเงิน","street",["me","stranger"],"sad","x","วันต่อมาคุณเห็นป้ายตามหาเงินที่หาย เจ้าของเป็นคนทำงานรายวันที่เก็บเงินก้อนนั้นมาทั้งเดือน",[["เอาเงินไปคืนทั้งหมด","หลัก,ใจ"],["คืนบางส่วนเพราะใช้ไปแล้ว","ผล"],["แกล้งไม่เห็นป้าย","ผล,ปล่อย"]],[44,[1]]],
+["เจ้าของร้านตรวจบิล","shop",["me","vendor"],"sad","x","เจ้าของร้านเปิดบิลเห็นว่าขายของขาดทุนเพราะป้ายผิด เขาเป็นผู้สูงวัยและดูกังวลมาก คุณจำได้ว่าเป็นคนซื้อ",[["กลับไปบอกและชดเชยส่วนต่าง","หลัก,ทำ"],["เงียบ เพราะเป็นความผิดของร้าน","ผล,ปล่อย"],["แวะอุดหนุนร้านบ่อยขึ้นเพื่อชดเชย","ใจ,ผล"]],[47,[1]]],
+["ผู้จัดการอาคารมาเคาะประตู","home",["me","stranger","dog"],"angry","x","เพื่อนบ้านได้ยินเสียงหมาเห่า ผู้จัดการอาคารมาเคาะประตูห้องคุณ",[["ยอมรับ และขอเวลาหาบ้านให้มัน","ใจ,ทำ"],["โกหกว่าไม่มีหมาในห้อง","ผล"],["ขออนุญาตชั่วคราวตามขั้นตอน","กฎ,ทำ"]],[13,[0]]],
+["ข้อมูลใหม่ออกมา","online",["me","stranger"],"sad","x","ข้อมูลใหม่ปรากฏว่าคนในโพสต์ประจานที่คุณแชร์ ไม่ได้ทำผิดตามที่เข้าใจ",[["ลบโพสต์ แล้วขอโทษสาธารณะ","หลัก,ทำ"],["ลบเงียบๆ","ผล"],["ไม่ทำอะไร เพราะคนอื่นก็แชร์","ปล่อย"]],[38,[0]]]
 ];
 const ARCH=[
 {id:"guardian",n:"ผู้พิทักษ์หลักการ",v:[1,.4,.5,-.6,.1],ic:"shield",sh:"#3b82f6",tag:"เส้นของฉัน ใครก็ข้ามไม่ได้",d:"คุณถือว่าความถูกต้องไม่ใช่เรื่องต่อรอง เห็นสิ่งผิดแล้วมักเลือกพูดหรือลงมือ แม้จะต้องเสียน้ำใจหรือเสียเวลา",g:"ซื่อตรง น่าไว้ใจ คนรอบข้างรู้ว่าคุณไม่โกง",b:"ความเข้มงวดอาจทำให้คนใกล้ตัวรู้สึกถูกตัดสิน และคุณอาจมองข้ามบริบทที่ทำให้คนพลาด"},
@@ -291,8 +356,57 @@ const ACT=[
 /*57*/{c:["me","boss"],s:"office",p:[["letter",0]],a:["give:0:1","think","keep:0"]},
 /*58*/{p:[["trophy",0]],a:["talk:-1:1","keep:0","give:0:1"]},
 /*59*/{p:[["money",0]],a:["give:0:1","refuse","think"]},
-/*60*/{p:[["letter",0]],a:["leave","soft:-1:1","call"]}
+/*60*/{p:[["letter",0]],a:["leave","soft:-1:1","call"]},
+/*61*/{"p":[["doc",1]],"a":["refuse","stay","report:msg:1"]},
+/*62*/{"p":[["doc",0]],"a":["stay","work","talk:-1:1"]},
+/*63*/{"p":[],"a":["lie:-1:2","talk:-1:2","think"]},
+/*64*/{"p":[["letter",0]],"a":["talk:-1:2","stay","leave"]},
+/*65*/{"p":[],"a":["lie:-1:2","refuse","talk:-1:1"]},
+/*66*/{"p":[["doc",0]],"a":["give:0:2","stay","work"]},
+/*67*/{"p":[["doc",0]],"a":["stay","give:0:2","talk:-1:2"]},
+/*68*/{"p":[["letter",0]],"a":["give:0:1","refuse","talk:-1:2"]},
+/*69*/{"p":[["doc",1]],"a":["refuse","work","talk:-1:1"]},
+/*70*/{"p":[],"a":["soft:-1:1","stay","call"]},
+/*71*/{"p":[["coffee",1]],"a":["talk:-1:1","stay","report:doc:9"]},
+/*72*/{"p":[["doc",1]],"a":["work","refuse","talk:-1:1"]},
+/*73*/{"p":[["money",0]],"a":["call","talk:-1:2","stay"]},
+/*74*/{"p":[["doc",1]],"a":["take:0:1","refuse","work"]},
+/*75*/{"p":[],"a":["leave","stay","work"]},
+/*76*/{"p":[["bag",0]],"a":["keep:0","refuse","think"]},
+/*77*/{"p":[["phone",0]],"a":["report:heart:9","think","call"]},
+/*78*/{"p":[["phone",0]],"a":["report:msg:9","stay","think"]},
+/*79*/{"p":[],"a":["work","think","stay"]},
+/*80*/{"p":[["trophy",1]],"a":["take:0:1","talk:-1:1","work"]},
+/*81*/{"p":[["money",0]],"a":["leave","keep:0","think"]},
+/*82*/{"p":[["letter",0]],"a":["talk:-1:1","stay","give:0:1"]},
+/*83*/{"p":[["doc",1]],"a":["soft:-1:1","think","talk:-1:1"]},
+/*84*/{"p":[["phone",0]],"a":["leave","work","call"]},
+/*85*/{"p":[["ticket",0]],"a":["soft:-1:1","soft:-1:2","think"]},
+/*86*/{"p":[["gift",0]],"a":["give:0:1","give:0:2","think"]},
+/*87*/{"p":[],"a":["talk:-1:1","report:doc:9","work"]},
+/*88*/{"p":[["gift",0]],"a":["give:0:1","stay","leave"]},
+/*89*/{"p":[["bread",1]],"a":["soft:-1:1","talk:-1:2","stay"]},
+/*90*/{"p":[["money",0]],"a":["give:0:-2","talk:-1:1","soft:-1:1"]},
+/*91*/{"p":[["doc",1]],"a":["report:-1:9","soft:-1:1","stay"]},
+/*92*/{"p":[["doc",1]],"a":["report:-1:9","soft:-1:1","stay"]},
+/*93*/{"p":[["money",1]],"a":["report:-1:9","soft:-1:1","stay"]},
+/*94*/{"p":[["money",1]],"a":["report:-1:9","soft:-1:1","stay"]},
+/*95*/{"p":[["letter",1]],"a":["report:-1:9","talk:-1:1","stay"]},
+/*96*/{"p":[["letter",1]],"a":["report:-1:9","talk:-1:1","stay"]},
+/*97*/{"p":[["msg",1]],"a":["report:-1:9","report:msg:9","stay"]},
+/*98*/{"p":[["msg",1]],"a":["report:-1:9","report:msg:9","stay"]},
+/*99*/{"p":[["key",1]],"a":["report:-1:9","talk:-1:1","stay"]},
+/*100*/{"p":[["key",1]],"a":["report:-1:9","talk:-1:1","stay"]},
+/*101*/{"p":[["money",0]],"a":["give:0:1","give:0:1","talk:-1:1"]},
+/*102*/{"p":[["phone",2]],"a":["lie:-1:2","talk:-1:2","refuse"]},
+/*103*/{"p":[["doc",1]],"a":["take:0:1","report:-1:9","stay"]},
+/*104*/{"p":[["money",0]],"a":["give:0:1","stay","lie:-1:1"]},
+/*105*/{"p":[["money",0]],"a":["give:0:1","keep:0","leave"]},
+/*106*/{"p":[["money",0]],"a":["give:0:1","stay","soft:-1:1"]},
+/*107*/{"p":[],"a":["soft:-1:1","lie:-1:1","talk:-1:1"]},
+/*108*/{"p":[["msg",1]],"a":["report:msg:9","think","stay"]}
 ];
+const PAIRS=[[90,91],[92,93],[94,95],[96,97],[98,99]];
 //#DATA_END
 
 /* ---------- พื้นฐาน ---------- */
@@ -427,11 +541,23 @@ function drawDog(c,ts,oy){
   R(3,y-14+sh,8,8,'#c8873a');R(9,y-11+sh,4,4,'#e0a458');R(12,y-11+sh,1,1,'#222');R(8,y-12+sh,1,2,'#222');R(3,y-15+sh,3,5,'#8a5a22');
   R(-11,y-13+wag+(sad?4:0)+sh,3,6,'#c8873a');
 }
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const LK_SKIN=['#f2c9a0','#e0b48a','#c68e5f','#8d5a3a','#f7d9bd'],LK_HAIR=['#2a1a12','#5a3a1e','#1a1a1a','#8a5a22','#b5651d','#6a3a1e','#d8d0c0','#a83232'],
+LK_SHIRT=['#3b82f6','#e0455c','#2bb673','#f2b134','#8e6ad8','#ee6aa7','#4fb5c9','#c8873a','#7ab7a5','#9aa7b5'],CAPS=['#d9473f','#2d3342','#2bb673','#f2b134'];
+function mkLook(kind,seed){
+  const r=mulberry(seed*2654435761>>>0),pick=a=>a[Math.floor(r()*a.length)],k=KINDS[kind]||{};
+  const L={skin:pick(LK_SKIN)},fixed=(kind==='boss'||kind==='vendor'||kind==='elder');
+  if(kind!=='elder')L.hair=pick(LK_HAIR);
+  if(!fixed&&kind!=='parent'||kind==='parent')L.shirt=(kind==='boss'||kind==='vendor'||kind==='elder')?k.shirt:pick(LK_SHIRT);
+  if(!fixed&&!k.kid){L.long=k.long?1:(r()<.25?1:0);if(r()<.2)L.cap=pick(CAPS)}
+  if(r()<.25)L.glasses=1;
+  return L;
+}
 function drawChar(c,ts,force){
   let[ox,oy,ch]=force||offs(c,ts);oy+=(c.ay||0);
   ctx.save();ctx.translate(Math.round(c.x+(c.ax||0)+ox),0);if(c.flip)ctx.scale(-1,1);
   if(c.kind==='dog'){drawDog(c,ts,oy);ctx.restore();return}
-  const k=KINDS[c.kind]||KINDS.stranger,kid=!!k.kid,hl=kid?3:5,hb=kid?6:8;
+  const k0=KINDS[c.kind]||KINDS.stranger,k=c.look?Object.assign({},k0,c.look):k0,kid=!!k.kid,hl=kid?3:5,hb=kid?6:8;
   const gy=GY+Math.round(oy),b=c.walk?0:(Math.floor(ts/450+c.ph)%2?-1:0);
   const legY=gy-hl,bodyY=legY-hb+b,headY=bodyY-7,hairY=headY-2;
   R(-6,GY,12,1,'rgba(0,0,0,.28)');
@@ -457,6 +583,8 @@ function drawChar(c,ts,force){
   else if(mood==='happy'){R(0,m,3,2,'#6b2d2d')}
   else if(mood==='surprised'){R(1,m-1,2,2,'#6b2d2d');R(-1,ey-2,2,1,'#222');R(2,ey-2,2,1,'#222')}
   else R(1,m,2,1,'#6b2d2d');
+  if(k.glasses){const G1='#1b2238';R(-1,ey-1,5,1,G1);R(-1,ey+2,5,1,G1);R(-1,ey,1,2,G1);R(3,ey,1,2,G1);R(1,ey,1,1,G1)}
+  if(k.cap){R(-5,hairY-1,10,3,k.cap);R(3,hairY+1,4,1,k.cap)}
   ctx.restore();
 }
 function bubble(c,kind,ts){
@@ -495,33 +623,44 @@ function sfx(f,d,type,v){if(muted)return;try{AC=AC||new(window.AudioContext||win
 let S=null,G=null,screen='start',typer=null;
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');screen={sStart:'start',sGame:'game',sRegret:'regret',sResult:'result'}[id];window.scrollTo(0,0)}
 
+const inPair=new Set(PAIRS.flat());
 function pickQuestions(n){
-  const ids=[...Array(QS.length).keys()],need=Math.max(3,Math.floor(n/5));
+  const ids=[...Array(QS.length).keys()].filter(i=>!QS[i][7]),need=Math.max(3,Math.floor(n/5));
   for(let tries=0;tries<300;tries++){
     shuffle(ids);const pick=ids.slice(0,n),cnt=[0,0,0,0,0];
     pick.forEach(i=>{const ax=new Set();QS[i][6].forEach(o=>o[1].split(',').forEach(t=>ax.add(TAGAX[t][0])));ax.forEach(a=>cnt[a]++)});
-    if(cnt.every(c=>c>=need))return pick;
+    if(cnt.every(c=>c>=need))return withPairs(pick,ids);
   }
-  return ids.slice(0,n);
+  return withPairs(ids.slice(0,n),ids);
 }
-function startGame(n){S={order:pickQuestions(n),i:0,ans:[],ready:false,regret:null};showScreen('sGame');loadQ()}
+function withPairs(pick,ids){
+  // ถ้าได้ข้อใดข้อหนึ่งของคู่ ให้ได้อีกข้อด้วย โดยสลับกับข้อที่ไม่อยู่ในคู่
+  PAIRS.forEach(([s,f])=>{
+    const a=pick.includes(s),b=pick.includes(f);if(a===b)return;
+    const miss=a?f:s,keep=a?s:f,cand=pick.map((q,i)=>[q,i]).filter(([q])=>!inPair.has(q));
+    if(cand.length){pick[cand[Math.floor(Math.random()*cand.length)][1]]=miss}
+  });
+  return shuffle(pick);
+}
+function startGame(n){const seed=Math.floor(Math.random()*1e6);S={order:pickQuestions(n),i:0,ans:[],ready:false,regret:null,n,seed,fu:0,fuMax:Math.max(1,Math.round(n/12)),done:false,qsent:false};S.look=mkLook('me',seed+99);showScreen('sGame');loadQ()}
 
 function makeStage(id,t0){
   const q=QS[id],ac=ACT[id],cast=ac.c||q[2],mood=q[3],n=cast.length,tx=n===1?[72]:n===2?[42,114]:[30,78,124];
   return{scene:ac.s||q[1],t0,last:t0,parts:[],bm:mood,act:null,
     props:(ac.p||[]).map(p=>p[1]==='g'?{n:p[0],h:'g',gx:p[2],gy:p[3]}:{n:p[0],h:p[1]}),
-    chars:cast.map((k,i)=>({kind:k,x:i?180:-20,sx:i?180:-20,tx:tx[i],flip:i>0,mood:i?mood:'neutral',ph:i*1.7,an:null,walk:true,ax:0,ay:0}))};
+    chars:cast.map((k,i)=>({kind:k,look:(i===0&&k==='me'&&S&&S.look)?S.look:(k==='dog'?null:mkLook(k,id*31+i*7+(S?S.seed:0))),x:i?180:-20,sx:i?180:-20,tx:tx[i],flip:i>0,mood:i?mood:'neutral',ph:i*1.7,an:null,walk:true,ax:0,ay:0}))};
 }
 function typeText(el,str,cb){
-  clearInterval(typer);el.textContent='';let i=0;const ch=[...str];
+  clearInterval(typer);el.textContent='';let i=0;
+  if(RM){typer=null;el.textContent=str;el.onclick=null;setTimeout(()=>cb&&cb(),60);return}const ch=[...str];
   typer=setInterval(()=>{i+=2;el.textContent=ch.slice(0,i).join('');if(i>=ch.length){clearInterval(typer);typer=null;cb&&cb()}},28);
   el.onclick=()=>{if(typer){clearInterval(typer);typer=null;el.textContent=str;cb&&cb()}};
 }
 function loadQ(){
   const id=S.order[S.i],q=QS[id];
   $('qno').textContent='ข้อ '+(S.i+1)+'/'+S.order.length;$('pfill').style.width=(S.i/S.order.length*100)+'%';
-  try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){}
-  $('qtitle').textContent=q[0];$('opts').innerHTML='';$('opts').classList.remove('on');S.ready=false;
+  try{window.scrollTo({top:0,behavior:RM?'auto':'smooth'})}catch(e){}
+  $('qtitle').textContent=(q[7]?'ตอนต่อ • ':'')+q[0];$('opts').innerHTML='';$('opts').classList.remove('on');S.ready=false;
   G=makeStage(id,performance.now());
   typeText($('qtext'),q[5],()=>showOpts(id));
 }
@@ -598,13 +737,24 @@ function applyAct(g,ts){
     bub(me,'dots',.3,.7);if(p>.3)mood(me,'worried');if(p>.4)mood(T,'happy');
   }
 }
+function queueFollow(id,oi){
+  if(S.fu>=S.fuMax)return;
+  for(let k=0;k<QS.length&&S.fu<S.fuMax;k++){
+    const r=QS[k][7];
+    if(r&&r[0]===id&&r[1].includes(oi)&&!S.order.includes(k)){
+      const pos=Math.min(S.order.length,S.i+3+Math.floor(Math.random()*3));
+      S.order.splice(pos,0,k);S.fu++;
+    }
+  }
+}
 function choose(id,oi,btn){
   if(!S.ready)return;S.ready=false;
   const rt=performance.now()-S.tOpt;S.ans.push({q:id,o:oi,rt});
-  try{$('cv').scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}
+  try{$('cv').scrollIntoView({behavior:RM?'auto':'smooth',block:'center'})}catch(e){}
   document.querySelectorAll('#opts .opt').forEach(b=>b.classList.add(b===btn?'sel':'dim'));
   const tags=QS[id][6][oi][1].split(',');startAct(ACT[id].a[oi],tags);sfx(520,.08);setTimeout(()=>sfx(780,.1),90);
-  setTimeout(()=>{S.i++;if(S.i>=S.order.length)showRegret();else loadQ()},2000);
+  queueFollow(id,oi);
+  setTimeout(()=>{S.i++;if(S.i>=S.order.length)showRegret();else loadQ()},RM?1100:2000);
 }
 
 /* ---------- วนเรนเดอร์ ---------- */
@@ -624,12 +774,13 @@ function renderGame(ts){
 function renderAvatar(ts){
   ctx=cx2;sPark(ts);const a=S&&S.res&&S.res.arch;if(!a)return;
   KINDS.arch={shirt:a.sh,hair:'#2a1a12',skin:SK,pants:'#2b3a67'};
-  const c={kind:'arch',x:80,flip:false,mood:'happy',ph:0,walk:false};
+  const c={kind:'arch',look:Object.assign({},S.look||{},{shirt:a.sh}),x:80,flip:false,mood:'happy',ph:0,walk:false};
   drawChar(c,ts,[0,-Math.abs(Math.sin(ts/260))*(Math.sin(ts/520)>0?3:0),Math.sin(ts/300)>0?1:0]);
   icon(a.ic,80-7,14+Math.round(Math.sin(ts/400)*2),2);
   for(let i=0;i<6;i++)if(((ts/300+i*1.3)%3)<1.6){const sx=14+((i*27)%132),sy=14+((i*17)%44);R(sx,sy,1,3,'#fff');R(sx-1,sy+1,3,1,'#fff')}
 }
-function loop(ts){requestAnimationFrame(loop);if(screen==='game'&&G)renderGame(ts);else if(screen==='result')renderAvatar(ts)}
+let lastDraw=0;
+function loop(ts){requestAnimationFrame(loop);if(RM&&ts-lastDraw<140)return;lastDraw=ts;if(screen==='game'&&G)renderGame(ts);else if(screen==='result')renderAvatar(ts)}
 requestAnimationFrame(loop);
 
 /* ---------- ย้อนเวลา ---------- */
@@ -663,11 +814,18 @@ function compute(){
   else ins.push('คุณใช้เวลาตัดสินใจเฉลี่ย '+sec+' วินาทีต่อข้อ');
   let mx=0;vec.forEach((v,i)=>{if(Math.abs(v)>Math.abs(vec[mx]))mx=i});
   if(Math.abs(vec[mx])>=.2)ins.push('แกนที่เด่นที่สุดของคุณคือ "'+AX[mx][0]+' ↔ '+AX[mx][1]+'" โดยเอนไปทาง "'+AX[mx][vec[mx]>0?1:0]+'"');
-  if(aS!==null&&aF!==null){
-    if(aS-aF>=.6){badges.push('สองมาตรฐาน');ins.push('คุณยึดหลักการเข้มกับคนนอก แต่ผ่อนปรนให้คนใกล้ตัว (ข้อที่เกี่ยวกับเพื่อนและครอบครัว คุณเลือกยึดหลักน้อยกว่าข้อที่เกี่ยวกับคนแปลกหน้า)')}
-    else if(aF-aS>=.6){badges.push('เข้มกับคนใกล้ตัว');ins.push('คุณเข้มงวดกับคนใกล้ตัวมากกว่าคนแปลกหน้า เหมือนคาดหวังให้คนที่รักทำสิ่งที่ถูกต้องมากเป็นพิเศษ')}
-    else{badges.push('มาตรฐานเดียว');ins.push('คุณใช้มาตรฐานใกล้เคียงกันทั้งกับคนแปลกหน้าและคนใกล้ตัว ซึ่งเป็นเรื่องที่ไม่ได้เจอบ่อยนัก')}
-  }
+  const aA=a=>{let v=0;QS[a.q][6][a.o][1].split(',').forEach(t=>{const[x,s]=TAGAX[t];if(x===0)v+=s});return v};
+  const prs=[];PAIRS.forEach(([s,f])=>{const a=S.ans.find(x=>x.q===s),b=S.ans.find(x=>x.q===f);if(a&&b)prs.push({s,f,d:aA(a)-aA(b)})});
+  const avgD=prs.length?prs.reduce((t,p)=>t+p.d,0)/prs.length:0;
+  let std=null;
+  if(prs.length>=2)std=avgD>=.8?'two':avgD<=-.8?'close':'one';
+  else if(aS!==null&&aF!==null)std=aS-aF>=.6?'two':aF-aS>=.6?'close':'one';
+  if(std==='two'){badges.push('สองมาตรฐาน');ins.push('คุณยึดหลักการเข้มกับคนนอก แต่ผ่อนปรนให้คนใกล้ตัว (ข้อที่เกี่ยวกับเพื่อนและครอบครัว คุณเลือกยึดหลักน้อยกว่าข้อที่เกี่ยวกับคนแปลกหน้า)')}
+  else if(std==='close'){badges.push('เข้มกับคนใกล้ตัว');ins.push('คุณเข้มงวดกับคนใกล้ตัวมากกว่าคนแปลกหน้า เหมือนคาดหวังให้คนที่รักทำสิ่งที่ถูกต้องมากเป็นพิเศษ')}
+  else if(std==='one'){badges.push('มาตรฐานเดียว');ins.push('คุณใช้มาตรฐานใกล้เคียงกันทั้งกับคนแปลกหน้าและคนใกล้ตัว ซึ่งเป็นเรื่องที่ไม่ได้เจอบ่อยนัก')}
+  const flips=prs.filter(p=>Math.abs(p.d)>=2);
+  if(flips.length){const p=flips[0];ins.push('มีคู่สถานการณ์ที่เหมือนกันทุกอย่าง ต่างกันแค่คนที่เกี่ยวข้อง เช่น "'+QS[p.s][0]+'" กับ "'+QS[p.f][0]+'" และคุณตอบต่างกันชัดเจน — เมื่อเป็น'+(p.d>0?'คนแปลกหน้า':'เพื่อนสนิท')+'คุณยึดหลักเข้มกว่า'+(flips.length>1?' (เกิดแบบนี้ '+flips.length+' จาก '+prs.length+' คู่ที่คุณเล่น)':''))}
+  else if(prs.length>=2&&prs.every(p=>p.d===0))ins.push('คุณเจอสถานการณ์คู่แฝด '+prs.length+' คู่ (เรื่องเดียวกัน ต่างแค่คนที่เกี่ยวข้อง) และตอบเหมือนกันทุกคู่ — เป็นสัญญาณว่าคุณใช้หลักเดียวกันไม่ว่าเป็นใคร');
   if(S.regret!=null){const a=S.ans.find(x=>x.q===S.regret);if(a)ins.push('ข้อที่คุณอยากย้อนกลับไปแก้คือ "'+QS[S.regret][0]+'" ตอนนั้นคุณเลือก "'+QS[S.regret][6][a.o][0]+'"')}
   else ins.push('คุณบอกว่าไม่มีข้อไหนที่อยากย้อนกลับไปแก้เลย');
   return{vec,avgRt,arch:rank[0].a,second:rank[1].a,badges,ins};
@@ -696,31 +854,35 @@ async function loadAgg(){
 }
 function saveResult(res){
   const a={};S.ans.forEach(x=>a[x.q]=x.o);
-  const rec={t:Date.now(),a,v:res.vec.map(x=>Math.round(x*100)/100),ar:res.arch.id,rg:S.regret};
+  const rec={t:Date.now(),a,v:res.vec.map(x=>Math.round(x*100)/100),ar:res.arch.id,rg:S.regret,n:S.ans.length};
+  if(rec.rg==null)delete rec.rg;
   try{const l=JSON.parse(localStorage.getItem('nr_local')||'[]');l.push(rec);localStorage.setItem('nr_local',JSON.stringify(l.slice(-200)))}catch(e){}
-  if(DB_URL){return fetch(DB_URL.replace(/\/$/,'')+'/results.json',{method:'POST',body:JSON.stringify(rec)}).catch(()=>{})}
+  const plausible=S.ans.length>=5&&res.avgRt>=500&&res.avgRt<=120000;
+  if(DB_URL&&plausible){return fetch(DB_URL.replace(/\/$/,'')+'/results.json',{method:'POST',body:JSON.stringify(rec)}).catch(()=>{})}
   return Promise.resolve();
 }
 
 /* ---------- หน้าผลลัพธ์ ---------- */
 function finish(){
-  const res=compute();S.res=res;showScreen('sResult');
+  S.done=true;const res=compute();S.res=res;showScreen('sResult');
   const a=res.arch;
   $('rName').textContent=a.n;$('rTag').textContent='“'+a.tag+'”';$('rDesc').textContent=a.d;$('rG').textContent=a.g;$('rB').textContent=a.b;
   $('rBadges').innerHTML=res.badges.map(b=>'<span class="badge">'+b+'</span>').join('')+'<div class="mut" style="margin-top:6px">ใกล้เคียงรองลงมา: '+res.second.n+'</div>';
   $('ins').innerHTML=res.ins.map(t=>'<div class="ins">'+t+'</div>').join('');
-  drawAxes(res.vec,null);
+  drawAxes(res.vec,null);renderCmp();setTimeout(refreshCard,700);
   $('agg').innerHTML='<h3>เทียบกับผู้เล่นคนอื่น</h3><p class="mut">กำลังโหลดสถิติ...</p>';
   sfx(660,.12);setTimeout(()=>sfx(880,.12),120);setTimeout(()=>sfx(1100,.2),260);
   saveResult(res).then(loadAgg).then(agg=>{drawAxes(res.vec,agg.avg);renderAgg(agg,res)});
 }
 function drawAxes(vec,avg){
-  $('axes').innerHTML=AX.map((l,i)=>'<div class="ax"><div class="axl"><span>'+l[0]+'</span><span>'+l[1]+'</span></div><div class="trk">'+(avg?'<i class="mo" style="left:'+((avg[i]+1)/2*100).toFixed(1)+'%"></i>':'')+'<i class="mk" style="left:'+((vec[i]+1)/2*100).toFixed(1)+'%"></i></div></div>').join('');
+  const fr=FR?FR.vec:null;$('lgF').style.display=fr?'':'none';
+  $('axes').innerHTML=AX.map((l,i)=>'<div class="ax"><div class="axl"><span>'+l[0]+'</span><span>'+l[1]+'</span></div><div class="trk">'+(fr?'<i class="mf" style="left:'+((fr[i]+1)/2*100).toFixed(1)+'%"></i>':'')+(avg?'<i class="mo" style="left:'+((avg[i]+1)/2*100).toFixed(1)+'%"></i>':'')+'<i class="mk" style="left:'+((vec[i]+1)/2*100).toFixed(1)+'%"></i></div></div>').join('');
 }
 function renderAgg(agg,res){
   if(!agg.live){$('agg').innerHTML='<h3>เทียบกับผู้เล่นคนอื่น</h3><p class="mut">'+(agg.err?'โหลดสถิติไม่สำเร็จ ลองใหม่ภายหลัง':'ยังไม่ได้เชื่อมฐานข้อมูลกลาง จึงยังเทียบกับผู้เล่นคนอื่นไม่ได้ (ผลของคุณถูกเก็บไว้ในเครื่องนี้เท่านั้น)')+'</p>';return}
   if(agg.n<MIN_N){$('agg').innerHTML='<h3>เทียบกับผู้เล่นคนอื่น</h3><p class="mut">ยังมีข้อมูลน้อยเกินไป (ตอนนี้ '+agg.n+' รอบ ต้องมีอย่างน้อย '+MIN_N+' รอบถึงจะแสดงสถิติ) ชวนเพื่อนมาเล่นเพิ่มได้เลย</p>';return}
-  const rows=S.ans.map(a=>{const c=agg.qc[a.q],s=(c[0]+c[1]+c[2])||1,sh=c.map(x=>x/s);return{a,sh,mx:Math.max(...sh)}});
+  const rows=S.ans.map(a=>{const c=agg.qc[a.q],s=(c[0]+c[1]+c[2])||1,sh=c.map(x=>x/s);return{a,sh,n:s,mx:Math.max(...sh)}}).filter(r=>r.n>=5);
+  if(!rows.length){$('agg').innerHTML='<h3>เทียบกับผู้เล่นคนอื่น</h3><p class="mut">ข้อที่คุณเล่นยังมีคนตอบน้อยเกินไปที่จะแสดงสถิติ (ต้องมีอย่างน้อย 5 คนต่อข้อ)</p>';return}
   const same=rows.reduce((t,r)=>t+r.sh[r.a.o],0)/rows.length*100;
   const split=[...rows].sort((x,y)=>x.mx-y.mx).slice(0,3),agree=[...rows].sort((x,y)=>y.mx-x.mx)[0];
   const tot=Object.values(agg.ac).reduce((a,b)=>a+b,0)||1;
@@ -738,11 +900,113 @@ function renderAgg(agg,res){
 
 /* ---------- ปุ่มต่างๆ ---------- */
 document.querySelectorAll('.modes .btn').forEach(b=>b.onclick=()=>{sfx(440,.08);startGame(+b.dataset.n)});
-$('bAgain').onclick=()=>{showScreen('sStart')};
+$('bAgain').onclick=()=>{FRSHOW();showScreen('sStart')};
 $('bCopy').onclick=()=>{const a=S&&S.res&&S.res.arch;if(!a)return;const t='ฉันได้บุคลิก “'+a.n+'” จากเกม เลือกแล้วไม่เสียใจ? — '+a.tag;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{$('bCopy').textContent='คัดลอกแล้ว'}).catch(()=>{$('bCopy').textContent='คัดลอกไม่ได้ ลองก๊อปเอง'})};
 const THEMES=[['','สดใส'],['gb','เกมบอย'],['dk','มืดหม่น']];let thi=0;
-$('bTheme').onclick=()=>{thi=(thi+1)%3;document.body.className=THEMES[thi][0];$('bTheme').textContent='ธีม: '+THEMES[thi][1]};
-$('bSnd').onclick=()=>{muted=!muted;$('bSnd').textContent='เสียง: '+(muted?'ปิด':'เปิด')};
+const PREF=(()=>{try{return JSON.parse(localStorage.getItem('nr_pref')||'{}')}catch(e){return{}}})();
+function savePref(){try{localStorage.setItem('nr_pref',JSON.stringify(PREF))}catch(e){}}
+let RM=PREF.rm!=null?!!PREF.rm:!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+function applyPref(){
+  const b=document.body.classList;b.remove('gb','dk','fs1','fs2');
+  if(THEMES[thi][0])b.add(THEMES[thi][0]);if(PREF.fs)b.add('fs'+PREF.fs);b.toggle('rm',RM);
+  $('bTheme').textContent='ธีม: '+THEMES[thi][1];$('bSnd').textContent='เสียง: '+(muted?'ปิด':'เปิด');
+  $('bFs').textContent='ตัวอักษร: '+['ปกติ','ใหญ่','ใหญ่มาก'][PREF.fs||0];$('bRm').textContent='ลดเคลื่อนไหว: '+(RM?'เปิด':'ปิด');
+}
+thi=Math.min(2,PREF.th||0);muted=!!PREF.mu;
+$('bTheme').onclick=()=>{thi=(thi+1)%3;PREF.th=thi;savePref();applyPref()};
+$('bSnd').onclick=()=>{muted=!muted;PREF.mu=muted?1:0;savePref();applyPref()};
+$('bFs').onclick=()=>{PREF.fs=((PREF.fs||0)+1)%3;savePref();applyPref()};
+$('bRm').onclick=()=>{RM=!RM;PREF.rm=RM?1:0;savePref();applyPref()};
+applyPref();
+
+/* ---------- ท้าเพื่อน: รหัสผลแบบสั้น ---------- */
+let FR=null;
+const encRes=res=>String.fromCharCode(97+ARCH.indexOf(res.arch))+res.vec.map(v=>String.fromCharCode(97+Math.round(v*10)+10)).join('');
+function parseCode(s){
+  const m=String(s||'').trim().match(/([a-j][a-u]{5})\s*$/);if(!m)return null;
+  const c=m[1],ar=ARCH[c.charCodeAt(0)-97];if(!ar)return null;
+  return{arch:ar,vec:[...c.slice(1)].map(ch=>(ch.charCodeAt(0)-97-10)/10),code:c};
+}
+function FRSHOW(){
+  const b=$('frBox');
+  if(FR){b.style.display='';b.innerHTML='เพื่อนส่งผลมาให้เทียบ เล่นให้จบแล้วจะเห็นว่าคุณกับเขาเหมือน/ต่างกันตรงไหน <button class="sm" id="frClr">ล้าง</button>';$('frClr').onclick=()=>{FR=null;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}FRSHOW()}}
+  else b.style.display='none';
+}
+$('frGo').onclick=()=>{const r=parseCode($('frIn').value);$('frMsg').textContent=r?'ใช้รหัสแล้ว':'รหัสไม่ถูกต้อง ลองคัดลอกลิงก์ทั้งหมดมาวาง';if(r){FR=r;FRSHOW()}};
+(function(){const m=(location.hash||'').match(/f=([a-j][a-u]{5})/);if(m){FR=parseCode(m[1])}FRSHOW()})();
+function challengeLink(){return location.href.split('#')[0]+'#f='+encRes(S.res)}
+$('bChallenge').onclick=()=>{
+  if(!S||!S.res)return;const t='ฉันได้บุคลิก “'+S.res.arch.n+'” ลองเล่นเกมนี้แล้วมาเทียบกัน '+challengeLink();
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{$('chNote').textContent='คัดลอกลิงก์แล้ว ส่งให้เพื่อนได้เลย'}).catch(()=>{$('chNote').textContent=t});
+};
+function renderCmp(){
+  const box=$('cmp');if(!FR||!S.res){box.style.display='none';return}
+  const me=S.res.vec,fr=FR.vec,diffs=me.map((v,i)=>Math.abs(v-fr[i])),sim=Math.round(diffs.reduce((t,d)=>t+(1-d/2),0)/5*100);
+  let lo=0,hi=0;diffs.forEach((d,i)=>{if(d<diffs[lo])lo=i;if(d>diffs[hi])hi=i});
+  const side=(v,i)=>Math.abs(v)<.15?'ตรงกลาง':AX[i][v>0?1:0];
+  box.style.display='';
+  box.innerHTML='<h3>เทียบกับเพื่อนของคุณ</h3><p>เพื่อนของคุณคือ <b>'+FR.arch.n+'</b> ส่วนคุณคือ <b>'+S.res.arch.n+'</b></p>'
+   +'<p style="margin-top:8px">ใกล้เคียงกันโดยเฉลี่ย <b>'+sim+'%</b> จาก 5 แกน</p>'
+   +'<div class="ins">ใกล้กันที่สุดคือแกน "'+AX[lo][0]+' ↔ '+AX[lo][1]+'"'+(diffs[lo]<.25?' แทบเหมือนกัน':'')+'</div>'
+   +(diffs[hi]>=.3?'<div class="ins">ต่างกันที่สุดคือแกน "'+AX[hi][0]+' ↔ '+AX[hi][1]+'" คุณเอนไปทาง "'+side(me[hi],hi)+'" ส่วนเพื่อนเอนไปทาง "'+side(fr[hi],hi)+'"</div>':'<div class="ins">ทุกแกนใกล้เคียงกันมาก</div>')
+   +'<p class="mut" style="margin-top:6px">▲ บนแผนที่นิสัยคือตำแหน่งของเพื่อน</p>';
+}
+
+/* ---------- การ์ดผลลัพธ์เป็นรูป ---------- */
+function wrapTh(g,text,maxW){const out=[];let line='';for(const ch of [...text]){const t=line+ch;if(g.measureText(t).width>maxW&&line){out.push(line);line=ch}else line=t}if(line)out.push(line);return out}
+async function makeCard(){
+  const res=S.res,a=res.arch;
+  try{await document.fonts.load('600 30px Prompt');await document.fonts.load('700 30px Prompt')}catch(e){}
+  const dk=document.body.classList.contains('dk'),bg=dk?'#1d2142':'#fffdf4',ink=dk?'#f1ecd9':'#26324b',ln=dk?'#05060f':'#1b2238',soft=dk?'#262b55':'#e8f3ff',mut=dk?'#9aa0c3':'#6a7390';
+  const c=document.createElement('canvas');c.width=720;c.height=1000;const g=c.getContext('2d');
+  const F=(w,s)=>w+' '+s+'px Prompt, Sarabun, sans-serif';
+  g.fillStyle=a.sh;g.fillRect(0,0,720,1000);
+  g.fillStyle=ln;g.fillRect(34,34,672,952);g.fillStyle=bg;g.fillRect(24,24,672,952);
+  g.strokeStyle=ln;g.lineWidth=6;g.strokeRect(24,24,672,952);
+  g.textAlign='center';g.fillStyle=ink;g.font=F(700,30);g.fillText('เลือกแล้วไม่เสียใจ?',360,78);
+  g.fillStyle=mut;g.font=F(500,20);g.fillText('ผลบุคลิกของฉัน',360,104);
+  g.imageSmoothingEnabled=false;g.drawImage(cv2,40,120,640,360);g.strokeRect(40,120,640,360);
+  let fs=54;g.fillStyle=ink;g.font=F(700,fs);while(g.measureText(a.n).width>620&&fs>28){fs-=2;g.font=F(700,fs)}
+  g.fillText(a.n,360,548);
+  g.fillStyle=mut;g.font=F(500,26);const tl=wrapTh(g,'“'+a.tag+'”',600).slice(0,2);tl.forEach((t,i)=>g.fillText(t,360,592+i*34));
+  let by=tl.length>1?672:650;
+  g.font=F(600,22);const bd=res.badges.slice(0,4),ws=bd.map(b=>g.measureText(b).width+28);
+  let rows=[[],[]],rw=[0,0],r=0;bd.forEach((b,i)=>{if(rw[r]+ws[i]+10>620&&r===0)r=1;rows[r].push(i);rw[r]+=ws[i]+10});
+  rows.forEach((row,ri)=>{if(!row.length)return;let x=360-(rw[ri]-10)/2;row.forEach(i=>{g.fillStyle=soft;g.fillRect(x,by-24+ri*40,ws[i],34);g.strokeStyle=ln;g.lineWidth=3;g.strokeRect(x,by-24+ri*40,ws[i],34);g.fillStyle=ink;g.fillText(bd[i],x+ws[i]/2,by+0+ri*40);x+=ws[i]+10})});
+  const ay=rows[1].length?758:730;
+  AX.forEach((l,i)=>{
+    const y=ay+i*42;g.font=F(600,17);g.fillStyle=ink;g.textAlign='left';g.fillText(l[0],48,y);g.textAlign='right';g.fillText(l[1],672,y);
+    g.fillStyle=soft;g.fillRect(48,y+8,624,14);g.strokeStyle=ln;g.lineWidth=3;g.strokeRect(48,y+8,624,14);
+    g.fillStyle=ln;g.globalAlpha=.35;g.fillRect(359,y+8,2,14);g.globalAlpha=1;
+    const mx=48+(res.vec[i]+1)/2*624;g.fillStyle=a.sh;g.fillRect(mx-8,y+2,16,26);g.strokeRect(mx-8,y+2,16,26);
+  });
+  g.textAlign='center';g.fillStyle=mut;g.font=F(500,18);
+  g.fillText(/^https?:/.test(location.href)?location.href.split('#')[0].replace(/^https?:\/\//,'').replace(/\/$/,''):'ลองเล่นแล้วมาเทียบกัน',360,958);
+  return c;
+}
+async function refreshCard(){
+  $('cardImg').style.display='none';$('cardWait').style.display='';
+  try{const c=await makeCard();$('cardImg').src=c.toDataURL('image/png');$('cardImg').style.display='';$('cardWait').style.display='none'}catch(e){$('cardWait').textContent='สร้างการ์ดไม่สำเร็จ'}
+}
+$('bShare').onclick=async()=>{
+  if(!S||!S.res)return;
+  let c;try{c=await makeCard()}catch(e){return}
+  c.toBlob(async b=>{
+    if(!b)return;const f=new File([b],'no-regret-result.png',{type:'image/png'});
+    try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:'ฉันได้บุคลิก “'+S.res.arch.n+'” จากเกม เลือกแล้วไม่เสียใจ?'});return}}catch(e){if(e&&e.name==='AbortError')return}
+    const u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download='no-regret-result.png';document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
+  },'image/png');
+};
+
+/* ---------- วิเคราะห์ว่าคนเลิกเล่นตรงไหน ---------- */
+function beaconQuit(){
+  if(!DB_URL||!S||S.done||S.qsent||!S.ans.length||(screen!=='game'&&screen!=='regret'))return;
+  S.qsent=true;
+  const body=JSON.stringify({t:Date.now(),q:S.order[Math.min(S.i,S.order.length-1)],i:S.i,n:S.order.length,k:S.ans.length});
+  try{navigator.sendBeacon(DB_URL.replace(/\/$/,'')+'/quits.json',body)}catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')beaconQuit()});
+addEventListener('pagehide',beaconQuit);
 document.addEventListener('keydown',e=>{if(screen!=='game'||!S||!S.ready)return;const k={'1':0,'2':1,'3':2}[e.key];if(k===undefined)return;const bs=document.querySelectorAll('#opts .opt');if(bs[k])bs[k].click()});
 </script>
 </body>
