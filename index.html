@@ -79,7 +79,7 @@ body.fs2{font-size:20px}body.fs2 .box{font-size:23px}body.fs2 .opt{font-size:22p
 <div id="app">
   <div class="top">
     <div class="logo">NO REGRETS?</div>
-    <div class="tb"><button class="sm" id="bSnd">เสียง: เปิด</button><button class="sm" id="bTheme">ธีม: สดใส</button><button class="sm" id="bFs">ตัวอักษร: ปกติ</button><button class="sm" id="bRm">ลดเคลื่อนไหว: ปิด</button></div>
+    <div class="tb"><button class="sm" id="bSnd">เสียง: เพลง+เอฟเฟกต์</button><button class="sm" id="bTheme">ธีม: สดใส</button><button class="sm" id="bFs">ตัวอักษร: ปกติ</button><button class="sm" id="bRm">ลดเคลื่อนไหว: ปิด</button></div>
   </div>
 
   <section id="sStart" class="screen on">
@@ -616,12 +616,104 @@ function icon(name,x,y,sc){sc=sc||1;const ic=ICONS[name];ic.m.forEach((row,j)=>{
 const TAGICON={"ผล":"coin","หลัก":"shield","ใจ":"heart","เหตุ":"bulb","พวก":"smile","เท่า":"scale","ทำ":"bolt","ปล่อย":"cloud","กฎ":"paper","เอง":"star"};
 
 /* ---------- เสียง ---------- */
-let AC=null,muted=false;
-function sfx(f,d,type,v){if(muted)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type||'square';o.frequency.value=f;g.gain.value=v||.04;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+(d||.08));o.stop(AC.currentTime+(d||.08))}catch(e){}}
+let AC=null,MG=null,SG=null,SND=0,muted=false,NB=null; // SND 0=เพลง+เอฟเฟกต์ 1=เฉพาะเอฟเฟกต์ 2=ปิด
+function ac(){
+  try{
+    if(!AC){
+      AC=new(window.AudioContext||window.webkitAudioContext)();
+      const m=AC.createGain();m.gain.value=.9;m.connect(AC.destination);
+      SG=AC.createGain();SG.gain.value=4;SG.connect(m);MG=AC.createGain();MG.gain.value=2.2;MG.connect(m);
+    }
+    if(AC.state==='suspended')AC.resume();
+  }catch(e){AC=null}
+  return AC;
+}
+function tone(f,t0,d,type,v,dest,slideTo){
+  const o=AC.createOscillator(),g=AC.createGain();o.type=type||'square';o.frequency.setValueAtTime(f,t0);
+  if(slideTo)o.frequency.exponentialRampToValueAtTime(slideTo,t0+d);
+  g.gain.value=.0001;g.gain.setValueAtTime(.0001,t0);g.gain.linearRampToValueAtTime(v,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+  o.connect(g);g.connect(dest);o.start(t0);o.stop(t0+d+.03);
+}
+function hat(t0,v,dest){
+  if(!NB){NB=AC.createBuffer(1,Math.floor(AC.sampleRate*.08),AC.sampleRate);const a=NB.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1}
+  const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NB;f.type='highpass';f.frequency.value=7000;
+  g.gain.value=v;g.gain.setValueAtTime(v,t0);g.gain.exponentialRampToValueAtTime(.0001,t0+.05);s.connect(f);f.connect(g);g.connect(dest);s.start(t0);s.stop(t0+.08);
+}
+function sfx(f,d,type,v){if(muted||!ac())return;tone(f,AC.currentTime,d||.08,type,v||.05,SG)}
+const NT=n=>440*Math.pow(2,(n-69)/12);
+function seq(notes,step,type,v){if(!ac())return;const t=AC.currentTime;notes.forEach((n,i)=>{if(n)tone(NT(n),t+i*step,step*1.7,type,v,SG)})}
+function verbSfx(v){
+  if(muted||!ac())return;const t=AC.currentTime;
+  switch(v){
+    case 'give':seq([72,76,79,84],.07,'square',.045);break;
+    case 'take':seq([84,79,76],.06,'square',.045);break;
+    case 'keep':seq([67,72,76],.07,'triangle',.09);break;
+    case 'leave':seq([69,65,62,57],.1,'triangle',.08);break;
+    case 'stay':seq([57,0,57],.2,'triangle',.08);break;
+    case 'soft':seq([72,76,79,76],.11,'triangle',.09);break;
+    case 'report':seq([88,84,88,84,88],.06,'square',.035);break;
+    case 'call':seq([84,88,84,88],.09,'square',.035);break;
+    case 'refuse':tone(150,t,.25,'sawtooth',.05,SG,85);break;
+    case 'think':seq([72,74,76,72,74,76],.09,'triangle',.07);break;
+    case 'lie':tone(330,t,.35,'square',.035,SG,210);break;
+    case 'work':for(let i=0;i<6;i++)tone(1800+(i%3)*200,t+i*.07,.03,'square',.02,SG);break;
+    default:seq([76,0,79],.09,'square',.04);
+  }
+}
+/* เพลงพื้นหลังสร้างสดด้วยโค้ด: เบส+อาร์เปจโจ+ทำนองสุ่มบนสเกลเพนทาโทนิก */
+const MUS={
+ menu:{bpm:108,prog:[[48,[60,64,67]],[53,[60,65,69]],[55,[59,62,67]],[48,[60,64,67]]],scale:[72,74,76,79,81,84],lead:'square',lv:.016,av:.022,hat:1},
+ game:{bpm:84,prog:[[45,[57,60,64]],[41,[57,60,65]],[48,[60,64,67]],[43,[55,59,62]]],scale:[69,72,74,76,79,81],lead:'triangle',lv:.05,av:.045,hat:0},
+ result:{bpm:118,prog:[[48,[60,64,67]],[55,[59,62,67]],[45,[57,60,64]],[53,[60,65,69]]],scale:[72,74,76,79,81,84,88],lead:'square',lv:.02,av:.022,hat:1}
+};
+const ARP=[0,1,2,1,0,1,2,1];
+let musMode=null,musTimer=null,musNext=0,musStep=0,musBar=0,melPat=[],melIdx=2;
+function newMelody(M){
+  melPat=[];
+  for(let i=0;i<8;i++){
+    if(Math.random()<(i%2?.55:.25)){melPat.push(-1);continue}
+    melIdx=Math.max(0,Math.min(M.scale.length-1,melIdx+[-2,-1,-1,0,1,1,2][Math.floor(Math.random()*7)]));melPat.push(melIdx);
+  }
+}
+function playStep(M,step,t,spb){
+  const [bass,ch]=M.prog[musBar%4];
+  if(step===0)newMelody(M);
+  if(step===0||step===4)tone(NT(bass),t,spb*3.2,'triangle',.07,MG);
+  tone(NT(ch[ARP[step]]+12),t,spb*1.5,M.lead==='square'?'square':'triangle',M.av,MG);
+  if(melPat[step]>=0)tone(NT(M.scale[melPat[step]]),t,spb*1.9,M.lead,M.lv,MG);
+  if(M.hat&&step%2===1)hat(t,.012,MG);
+}
+function musTick(){
+  if(!AC||SND!==0||!musMode){return}
+  const M=MUS[musMode],spb=60/M.bpm/2;
+  if(musNext<AC.currentTime)musNext=AC.currentTime+.05;
+  while(musNext<AC.currentTime+.35){
+    playStep(M,musStep,musNext,spb);musNext+=spb;musStep++;
+    if(musStep>=8){musStep=0;musBar++}
+  }
+}
+function startMusic(){
+  if(SND!==0||!musMode||!ac())return;
+  MG.gain.cancelScheduledValues(AC.currentTime);MG.gain.setValueAtTime(2.2,AC.currentTime);
+  musNext=AC.currentTime+.05;musStep=0;musBar=0;melIdx=2;
+  if(!musTimer)musTimer=setInterval(musTick,100);
+}
+function stopMusic(){
+  if(musTimer){clearInterval(musTimer);musTimer=null}
+  if(AC&&MG){try{MG.gain.cancelScheduledValues(AC.currentTime);MG.gain.setTargetAtTime(0,AC.currentTime,.05)}catch(e){}}
+}
+function setMusic(mode){
+  if(mode===musMode&&musTimer)return;
+  musMode=mode;
+  if(!AC){return} // ยังไม่มีการแตะหน้าจอ รอเสียงเริ่มตอนแตะครั้งแรก
+  stopMusic();if(SND===0)setTimeout(startMusic,60);
+}
+addEventListener('pointerdown',()=>{if(!ac())return;if(SND===0&&musMode&&!musTimer)startMusic()},{passive:true});
+document.addEventListener('visibilitychange',()=>{if(!AC)return;if(document.visibilityState==='hidden'){AC.suspend&&AC.suspend()}else if(SND!==2){AC.resume&&AC.resume()}});
 
 /* ---------- ระบบเกม ---------- */
 let S=null,G=null,screen='start',typer=null;
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');screen={sStart:'start',sGame:'game',sRegret:'regret',sResult:'result'}[id];window.scrollTo(0,0)}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');screen={sStart:'start',sGame:'game',sRegret:'regret',sResult:'result'}[id];window.scrollTo(0,0);setMusic({sStart:'menu',sGame:'game',sRegret:'game',sResult:'result'}[id])}
 
 const inPair=new Set(PAIRS.flat());
 function pickQuestions(n){
@@ -653,7 +745,7 @@ function makeStage(id,t0){
 function typeText(el,str,cb){
   clearInterval(typer);el.textContent='';let i=0;
   if(RM){typer=null;el.textContent=str;el.onclick=null;setTimeout(()=>cb&&cb(),60);return}const ch=[...str];
-  typer=setInterval(()=>{i+=2;el.textContent=ch.slice(0,i).join('');if(i>=ch.length){clearInterval(typer);typer=null;cb&&cb()}},28);
+  typer=setInterval(()=>{i+=2;if(i%6===0)sfx(780+Math.random()*160,.02,'square',.012);el.textContent=ch.slice(0,i).join('');if(i>=ch.length){clearInterval(typer);typer=null;cb&&cb()}},28);
   el.onclick=()=>{if(typer){clearInterval(typer);typer=null;el.textContent=str;cb&&cb()}};
 }
 function loadQ(){
@@ -670,7 +762,7 @@ function showOpts(id){
     const b=document.createElement('button');b.className='opt';b.style.animationDelay=(k*80)+'ms';
     b.innerHTML='<b>'+'กขค'[k]+'</b><span>'+q[6][oi][0]+'</span>';b.onclick=()=>choose(id,oi,b);box.appendChild(b);
   });
-  box.classList.add('on');S.tOpt=performance.now();S.ready=true;
+  box.classList.add('on');S.tOpt=performance.now();S.ready=true;sfx(988,.07,'triangle',.05);setTimeout(()=>sfx(1319,.09,'triangle',.05),80);
 }
 /* ---------- props และท่าทางตามตัวเลือก ---------- */
 function drawProp(name,x,y){
@@ -686,7 +778,7 @@ function drawStageProps(g){
   g.props.forEach((pr,i)=>{const pos=(g.act&&g.act.ov&&(i in g.act.ov))?g.act.ov[i]:propBase(g,pr);if(pos)drawProp(pr.n,pos.x,pos.y)});
 }
 function startAct(spec,tags){
-  const[v,pa,ta]=spec.split(':'),now=performance.now();
+  const[v,pa,ta]=spec.split(':'),now=performance.now();setTimeout(()=>verbSfx(v),260);
   const a={v,t0:now,dur:1700,pi:-1,fly:null,t:ta===undefined?1:+ta,ov:{},dr:[],bubs:[]};
   if(pa!==undefined&&pa!==''&&pa!=='-1'){if(/^\d+$/.test(pa))a.pi=+pa;else a.fly=pa}
   G.act=a;const me=G.chars[0];
@@ -871,7 +963,7 @@ function finish(){
   $('ins').innerHTML=res.ins.map(t=>'<div class="ins">'+t+'</div>').join('');
   drawAxes(res.vec,null);renderCmp();setTimeout(refreshCard,700);
   $('agg').innerHTML='<h3>เทียบกับผู้เล่นคนอื่น</h3><p class="mut">กำลังโหลดสถิติ...</p>';
-  sfx(660,.12);setTimeout(()=>sfx(880,.12),120);setTimeout(()=>sfx(1100,.2),260);
+  seq([72,76,79,84,88],.09,'square',.045);
   saveResult(res).then(loadAgg).then(agg=>{drawAxes(res.vec,agg.avg);renderAgg(agg,res)});
 }
 function drawAxes(vec,avg){
@@ -909,12 +1001,12 @@ let RM=PREF.rm!=null?!!PREF.rm:!!(window.matchMedia&&matchMedia('(prefers-reduce
 function applyPref(){
   const b=document.body.classList;b.remove('gb','dk','fs1','fs2');
   if(THEMES[thi][0])b.add(THEMES[thi][0]);if(PREF.fs)b.add('fs'+PREF.fs);b.toggle('rm',RM);
-  $('bTheme').textContent='ธีม: '+THEMES[thi][1];$('bSnd').textContent='เสียง: '+(muted?'ปิด':'เปิด');
+  $('bTheme').textContent='ธีม: '+THEMES[thi][1];$('bSnd').textContent='เสียง: '+['เพลง+เอฟเฟกต์','เฉพาะเอฟเฟกต์','ปิด'][SND];
   $('bFs').textContent='ตัวอักษร: '+['ปกติ','ใหญ่','ใหญ่มาก'][PREF.fs||0];$('bRm').textContent='ลดเคลื่อนไหว: '+(RM?'เปิด':'ปิด');
 }
-thi=Math.min(2,PREF.th||0);muted=!!PREF.mu;
+thi=Math.min(2,PREF.th||0);SND=Math.min(2,PREF.snd|0);muted=SND===2;
 $('bTheme').onclick=()=>{thi=(thi+1)%3;PREF.th=thi;savePref();applyPref()};
-$('bSnd').onclick=()=>{muted=!muted;PREF.mu=muted?1:0;savePref();applyPref()};
+$('bSnd').onclick=()=>{SND=(SND+1)%3;muted=SND===2;PREF.snd=SND;savePref();applyPref();if(SND===0){startMusic()}else stopMusic();if(SND!==2)sfx(660,.08)};
 $('bFs').onclick=()=>{PREF.fs=((PREF.fs||0)+1)%3;savePref();applyPref()};
 $('bRm').onclick=()=>{RM=!RM;PREF.rm=RM?1:0;savePref();applyPref()};
 applyPref();
